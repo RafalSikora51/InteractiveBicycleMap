@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Implementation-Title: maptest
+Implementation-Version: 0.0.1-SNAPSHOT
+Built-By: Rafaￅﾂ
+Implementation-Vendor-Id: com.interactive.map
+Build-Jdk: 1.8.0_161
+Implementation-URL: http://projects.spring.io/spring-boot/interactivem
+ ap/
+Created-By: Maven Integration for Eclipse
+Implementation-Vendor: Pivotal Software, Inc.
+

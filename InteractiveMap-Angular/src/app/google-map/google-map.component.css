@@ -1,0 +1,17 @@
+body {
+  margin: 0;
+}
+.not-active {
+  pointer-events: none;
+  cursor: default;
+}
+
+mat-toolbar-row {
+  justify-content: space-between;
+}
+
+
+mat-sidenav {
+  padding: 10px;
+  min-width: 400px;
+}

@@ -1,0 +1,6 @@
+com\interactive\map\entity\Point.class
+com\interactive\map\server\CustomizationBean.class
+com\interactive\map\util\SessionConnection.class
+com\interactive\map\repo\PointDAO.class
+com\interactive\map\server\ServerApplication.class
+com\interactive\map\controller\PointController.class

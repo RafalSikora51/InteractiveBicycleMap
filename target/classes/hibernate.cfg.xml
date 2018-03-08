@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+"-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+	<session-factory>
+
+		<property name="hibernate.connection.driver_class">
+			com.mysql.jdbc.Driver
+		</property>
+
+		<!-- Assume test is the database name -->
+
+		<property name="hibernate.connection.url">
+			jdbc:mysql://localhost:3306/interactive_map
+		</property>
+
+		<property name="hibernate.connection.username">
+			admin
+		</property>
+
+		<property name="hibernate.connection.password">
+			admin
+		</property>
+
+		<property name="hibernate.default_schema">interactive_map</property>
+
+		<!-- JDBC connection pool (use the built-in) -->
+		<property name="connection.pool_size">10</property>
+
+		<!-- SQL dialect -->
+		<property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
+		<property name="hibernate.id.new_generator_mappings">true</property>
+		<!-- Disable the second-level cache -->
+		<property name="cache.provider_class">org.hibernate.cache.internal.NoCacheProvider</property>
+
+		<!-- Echo all executed SQL to stdout -->
+		<property name="show_sql">false</property>
+
+		<!-- Drop and re-create the database schema on startup -->
+		<property name="hbm2ddl.auto">update</property>
+		<mapping class="com.interactive.map.entity.Point" />
+		<mapping class="com.interactive.map.entity.Segment" />
+
+
+	</session-factory>
+</hibernate-configuration>
