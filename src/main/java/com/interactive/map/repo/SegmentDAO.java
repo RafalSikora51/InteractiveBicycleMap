@@ -2,6 +2,8 @@ package com.interactive.map.repo;
 
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
+
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
@@ -25,26 +27,62 @@ public class SegmentDAO {
 		Session session = SessionConnection.getSessionFactory().openSession();
 
 		try {
+
 			session.beginTransaction();
 			Segment segment = new Segment();
-			double start_lat = points.stream().findFirst().get().getLat();
-			double start_lng = points.stream().findFirst().get().getLng();
-			Point newPoint = pointDAO.createPoint(start_lat, start_lng);
-			segment.setStartPointID(newPoint.getId());
-			newPoint.getSegments().add(segment);
-			double end_lat = points.stream().skip(points.size() - 1).findFirst().get().getLat();
-			double end_lng = points.stream().skip(points.size() - 1).findFirst().get().getLng();
-			Point newPoint2 = pointDAO.createPoint(end_lat, end_lng);
-			for (Point point : points) {
-				point.getSegments().add(segment);
-			}
-			segment.setEndPointID(newPoint2.getId());
-			newPoint2.getSegments().add(segment);
-			session.save(segment);
-			points.remove(newPoint);
-			points.remove(newPoint2);
 
-			segment.setPoints(points);
+			Optional<Point> startPoint = pointDAO.findPointByLatLng(points.stream().findFirst().get().getLat(),
+					points.stream().findFirst().get().getLng(), 0);
+
+			if (startPoint.isPresent()) {
+
+				segment.setStartPointID(startPoint.get().getId());
+				startPoint.get().getSegments().add(segment);
+				logger.info("Found start_point has ID : " + startPoint.get().getId());
+
+			} else {
+
+				Point point = points.stream().findFirst().get();
+				Point newPoint = pointDAO.createPoint(point.getLat(), point.getLng());
+				segment.setStartPointID(newPoint.getId());
+				newPoint.getSegments().add(segment);
+				points.remove(newPoint);
+				logger.info("Start_point NOT found, creating new Point");
+			}
+
+			Optional<Point> endPoint = pointDAO.findPointByLatLng(
+					points.stream().skip(points.size() - 1).findFirst().get().getLat(),
+					points.stream().skip(points.size() - 1).findFirst().get().getLng(), 0);
+
+			if (endPoint.isPresent()) {
+				segment.setEndPointID(endPoint.get().getId());
+				endPoint.get().getSegments().add(segment);
+				logger.info("End_point found with ID : " + endPoint.get().getId());
+
+				for (Point point : points) {
+					point.getSegments().add(segment);
+				}
+				segment.setPoints(points);
+
+			} else {
+				Point endPointNotFound = points.stream().skip(points.size() - 1).findFirst().get();
+				Point newPoint = pointDAO.createPoint(endPointNotFound.getLat(), endPointNotFound.getLng());
+				segment.setEndPointID(newPoint.getId());
+				newPoint.getSegments().add(segment);
+				logger.info("End point not found");
+				points.remove(newPoint);
+
+				for (Point point : points) {
+					point.getSegments().add(segment);
+				}
+				segment.setPoints(points);
+			}
+
+			// for (Point point : points) {
+			// point.getSegments().add(segment);
+			// }
+			// segment.setPoints(points);
+			session.save(segment);
 			session.getTransaction().commit();
 
 			SessionConnection.shutdown(session);
@@ -53,9 +91,11 @@ public class SegmentDAO {
 
 			return true;
 
-		} catch (Exception e) {
+		} catch (Exception exception) {
 
-			e.getStackTrace();
+			exception.getStackTrace();
+			logger.error(exception.getMessage());
+			session.getTransaction().rollback();
 			SessionConnection.shutdown(session);
 			return false;
 		}

@@ -24,10 +24,10 @@ public class Point {
 	private int id;
 
 	@Column(name = "LATITUDE", nullable = false)
-	private double lat;
+	private double latitude;
 
 	@Column(name = "LONGITUDE", nullable = false)
-	private double lng;
+	private double longitude;
 
 	@ManyToMany(cascade = { CascadeType.ALL }, mappedBy = "points", fetch = FetchType.EAGER)
 	@JsonIgnore
@@ -39,9 +39,9 @@ public class Point {
 		final int prime = 31;
 		int result = 1;
 		long temp;
-		temp = Double.doubleToLongBits(lat);
+		temp = Double.doubleToLongBits(latitude);
 		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(lng);
+		temp = Double.doubleToLongBits(longitude);
 		result = prime * result + (int) (temp ^ (temp >>> 32));
 		return result;
 	}
@@ -55,9 +55,9 @@ public class Point {
 		if (getClass() != obj.getClass())
 			return false;
 		Point other = (Point) obj;
-		if (Double.doubleToLongBits(lat) != Double.doubleToLongBits(other.lat))
+		if (Double.doubleToLongBits(latitude) != Double.doubleToLongBits(other.latitude))
 			return false;
-		if (Double.doubleToLongBits(lng) != Double.doubleToLongBits(other.lng))
+		if (Double.doubleToLongBits(longitude) != Double.doubleToLongBits(other.longitude))
 			return false;
 		return true;
 	}
@@ -71,19 +71,19 @@ public class Point {
 	}
 
 	public double getLat() {
-		return lat;
+		return latitude;
 	}
 
 	public void setLat(double lat) {
-		this.lat = lat;
+		this.latitude = lat;
 	}
 
 	public double getLng() {
-		return lng;
+		return longitude;
 	}
 
 	public void setLng(double lng) {
-		this.lng = lng;
+		this.longitude = lng;
 	}
 
 	public Set<Segment> getSegments() {
@@ -100,19 +100,19 @@ public class Point {
 
 	public Point(int id, double lat, double lng) {
 		this.id = id;
-		this.lat = lat;
-		this.lng = lng;
+		this.latitude = lat;
+		this.longitude = lng;
 	}
 
 	public Point(double lat, double lng) {
-		this.lat = lat;
-		this.lng = lng;
+		this.latitude = lat;
+		this.longitude = lng;
 	}
 
 	public Point(int id, double lat, double lng, Set<Segment> segments) {
 		this.id = id;
-		this.lat = lat;
-		this.lng = lng;
+		this.latitude = lat;
+		this.longitude = lng;
 		this.segments = segments;
 	}
 
