@@ -76,7 +76,7 @@ public class PointDAO {
 	}
 
 	@SuppressWarnings("unchecked")
-	public Optional<Point> findPointByLatLng(double latitude, double longitude, int pointPosition) {
+	public Optional<Point> findPointByLatLng(double latitude, double longitude) {
 		logger.debug("findPointByGivenLatLng");
 
 		Session session = SessionConnection.getSessionFactory().openSession();
@@ -96,7 +96,7 @@ public class PointDAO {
 				logger.info(point.getId() + "\n" + point.getLat() + "\n" + point.getLng());
 			}
 
-			return Optional.ofNullable(points.get(pointPosition));
+			return Optional.ofNullable(points.get(0));
 		} else {
 			return Optional.empty();
 		}

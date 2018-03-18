@@ -5,7 +5,10 @@ import { SegmentComponent } from './segment/segment.component';
 
 const routes: Routes = [
   { path: '', component: GoogleMapComponent },
+  { path: 'segments/alljson', component: SegmentComponent },
   { path: 'segments', component: SegmentComponent },
+  { path: 'localhost:4200/segments/:id', component: SegmentComponent },
+
 ];
 
 @NgModule({

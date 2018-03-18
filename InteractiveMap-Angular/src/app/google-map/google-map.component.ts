@@ -4,7 +4,10 @@ import { } from '@types/googlemaps';
 import { map } from 'rxjs/operator/map';
 import { Input, Output, EventEmitter } from '@angular/core';
 import { Marker } from '../Model/marker';
-
+import { SegmentService } from '../segment/segment.service';
+import { SegmentComponent } from '../segment/segment.component';
+import { SegmentPointSet } from '../Model/SegmentPointSet';
+import { GoogleMapService } from './google-map.service';
 @Component({
   selector: 'app-google-map',
   templateUrl: './google-map.component.html',
@@ -17,13 +20,17 @@ export class GoogleMapComponent implements OnInit {
 
   tempMarker: Marker = { lat: 0, lng: 0 };
   markersArray: any[] = [0, 0];
+  segmentPointsSet: SegmentPointSet[];
 
+  constructor(private segmentService: SegmentService,
+    private segmentComponent: SegmentComponent,
 
-  constructor() {
-
+  ) {
+    // this.segmentPointsSet = this.segmentComponent.getAllSegmentsWithPoints();
     this.addBicycleLayerEnable = false;
     this.bikeLayer = new google.maps.BicyclingLayer();
     this.showArray = false;
+
   }
 
   showFiller = false;
@@ -35,9 +42,11 @@ export class GoogleMapComponent implements OnInit {
   googleMap: google.maps.Map;
 
   ngOnInit() {
+    this.segmentPointsSet = this.segmentComponent.getAllSegmentsWithPoints();
+
     const mapCanvas = document.getElementById('map');
     const myCenter = new google.maps.LatLng(53.131083, 23.154742);
-    const mapOptions  = {
+    const mapOptions = {
       center: myCenter,
       zoom: 15,
       mapTypeId: google.maps.MapTypeId.ROADMAP
@@ -46,11 +55,16 @@ export class GoogleMapComponent implements OnInit {
     this.googleMap = new google.maps.Map(mapCanvas, mapOptions);
     google.maps.event.addListener(this.googleMap, 'click', (event) => {
       this.placeMarker(event);
-
-
     });
     this.markersArray.pop();
     this.markersArray.pop();
+
+  }
+
+  showTest() {
+    console.log('test1');
+    console.log(this.segmentPointsSet);
+    console.log('test2');
   }
 
   placeMarker(event) {
@@ -67,6 +81,25 @@ export class GoogleMapComponent implements OnInit {
     this.tempMarker = { lat: 0, lng: 0 };
 
   }
+
+
+
+  addAllMarkersFromAPI() {
+    let marker;
+
+    this.segmentPointsSet.forEach(element => {
+      this.tempMarker.lat = element.points.values().next().value.lat;
+      this.tempMarker.lng = element.points.values().next().value.lng;
+      this.markersArray.push(this.tempMarker);
+
+      marker = new google.maps.Marker({
+        position: this.tempMarker,
+        map: this.googleMap
+      });
+      console.log(this.markersArray);
+    });
+  }
+
   showArrayMarkers() {
     if (this.showArray === false) {
       this.showArray = true;

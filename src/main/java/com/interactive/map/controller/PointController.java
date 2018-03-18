@@ -35,7 +35,7 @@ public class PointController {
 	}
 
 	@RequestMapping(method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-	public boolean createUser(@RequestBody Point point) {
+	public boolean createPoint(@RequestBody Point point) {
 
 		logger.debug("createPoint");
 		pointDAO.createPoint(point);

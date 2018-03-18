@@ -2,15 +2,15 @@ package com.interactive.map.entity;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
+
+import org.aspectj.internal.lang.annotation.ajcDeclareAnnotation;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -29,10 +29,9 @@ public class Point {
 	@Column(name = "LONGITUDE", nullable = false)
 	private double longitude;
 
-	@ManyToMany(cascade = { CascadeType.ALL }, mappedBy = "points", fetch = FetchType.EAGER)
+	@ManyToMany(mappedBy = "points")
 	@JsonIgnore
 	private Set<Segment> segments = new LinkedHashSet<Segment>();
-
 	
 	@Override
 	public int hashCode() {

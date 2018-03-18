@@ -5,6 +5,7 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -31,7 +32,7 @@ public class Segment {
 	@Column(name = "LENGTH", nullable = false, unique = false)
 	private double length;
 
-	@ManyToMany(cascade = { CascadeType.ALL })
+	@ManyToMany(cascade = { CascadeType.ALL },  fetch = FetchType.EAGER)
 	@JoinTable(name = "SEGMENT_POINT", joinColumns = {
 			@JoinColumn(name = "SEGMENT_ID", nullable = false) }, inverseJoinColumns = {
 					@JoinColumn(name = "POINT_ID", nullable = false) })

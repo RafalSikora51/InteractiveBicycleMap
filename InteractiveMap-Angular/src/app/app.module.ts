@@ -103,7 +103,7 @@ import { HttpClientModule, HttpClient } from '@angular/common/http';
     MatStepperModule,
     AlertModule.forRoot()
   ],
-  providers: [GoogleMapService, SegmentService, PointService],
+  providers: [GoogleMapService, SegmentService, PointService, SegmentComponent],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

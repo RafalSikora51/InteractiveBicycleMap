@@ -7,10 +7,13 @@ import 'rxjs/add/operator/catch';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/observable/throw';
 import { Segment } from '../Model/segment';
+import { SegmentPointSet } from '../Model/SegmentPointSet';
 @Injectable()
 export class SegmentService {
 
   private SEGMENTS_API_URL = 'http://localhost:9090/segments';
+  private SEGMENTSALL_API_URL = 'http://localhost:9090/segments/alljson';
+
 
   constructor(private http: HttpClient) { }
 
@@ -31,10 +34,28 @@ export class SegmentService {
   }
 
   public getAllSegments(): Observable<Segment[]> {
-    return this.http.get<Segment[]>(this.SEGMENTS_API_URL)
+    return this.http.get<any>(this.SEGMENTS_API_URL)
       .pipe(
-        tap(users => this.log(`fetched segments`)),
+        tap(segments => this.log(`fetched segments`)),
         catchError(this.handleError('getAllSegments', []))
       );
   }
+
+  public getAllPointsForSegment(id: number): Observable<any> {
+    return this.http.get<any>(this.SEGMENTS_API_URL + `/${id}`)
+      .pipe(
+        tap(segments => this.log(`fetched points for current segment`)),
+        catchError(this.handleError('getAllPointsForSegment', []))
+      );
+  }
+
+  public getAllSegmentsWithPoints(): Observable<SegmentPointSet[]> {
+    return this.http.get<any>(this.SEGMENTSALL_API_URL)
+      .pipe(
+        tap(segments => this.log(`fetched all segments with all points`)),
+        catchError(this.handleError('getallSegmentsWithPoints', []))
+      );
+  }
+
+
 }
