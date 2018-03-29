@@ -1,9 +1,16 @@
 package com.interactive.map.repo;
 
-import java.util.LinkedHashMap;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Scanner;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -24,16 +31,22 @@ public class SegmentDAO {
 
 	@Autowired
 	SegmentDAO segmentDAO;
-	
-
 
 	private static Logger logger = LogManager.getLogger(SegmentDAO.class);
 	Segment segment = null;
 
+	Predicate<Point> pointWithSameLatLng(Point point) {
+		return p -> p.getLat() == point.getLat() && p.getLng() == point.getLng();
+	}
+
 	public Segment createSegmentTransaction(LinkedHashSet<Point> points) {
 
+		// Wyszukuje punkt początkowy z listy points podanej w argumencie
 		Optional<Point> startPoint = pointDAO.findPointByLatLng(points.stream().findFirst().get().getLat(),
 				points.stream().findFirst().get().getLng());
+
+		// Wyszukuje punkt końcowy z listy points podanej w argumencie (
+		// skip(points.size()-1 <- przechodzi do ostatniego elementu) )
 		Optional<Point> endPoint = pointDAO.findPointByLatLng(
 				points.stream().skip(points.size() - 1).findFirst().get().getLat(),
 				points.stream().skip(points.size() - 1).findFirst().get().getLng());
@@ -41,41 +54,41 @@ public class SegmentDAO {
 		Segment segment = null;
 
 		Session session = SessionConnection.getSessionFactory().openSession();
+
 		try {
 			session.beginTransaction();
 			segment = new Segment();
 
+			// Jeżeli Optional startPoint znajduje się w liście points
+
 			if (startPoint.isPresent()) {
+
+				// tworzy nowy punkt o takich samych parametrach
 				Point pointStart = startPoint.get();
 				segment.setStartPointID(pointStart.getId());
-				// pointStart.getSegments().add(segment);
-				points.remove(pointStart);
+
+				points.removeIf(pointWithSameLatLng(startPoint.get()));
+
 			} else {
 				Point point = points.stream().findFirst().get();
 				Point newPoint = pointDAO.createPoint(point.getLat(), point.getLng());
 				segment.setStartPointID(newPoint.getId());
-				// newPoint.getSegments().add(segment);
-				points.remove(newPoint);
-				logger.info("Start_point NOT found, creating new Point");
+				points.removeIf(pointWithSameLatLng(newPoint));
 			}
-
 			if (endPoint.isPresent()) {
 				Point pointEnd = endPoint.get();
 				segment.setEndPointID(pointEnd.getId());
-				// pointEnd.getSegments().add(segment);
-				logger.info("End_point found with ID : " + endPoint.get().getId());
-				points.remove(pointEnd);
+				points.removeIf(pointWithSameLatLng(endPoint.get()));
 			} else {
 				Point endPointNotFound = points.stream().skip(points.size() - 1).findFirst().get();
 				Point newPoint = pointDAO.createPoint(endPointNotFound.getLat(), endPointNotFound.getLng());
 				segment.setEndPointID(newPoint.getId());
-				// newPoint.getSegments().add(segment);
-				logger.info("End point not found");
-				points.remove(newPoint);
+				points.removeIf(pointWithSameLatLng(newPoint));
 			}
 
 			segment.setPoints(points);
-			session.save(segment);
+			session.saveOrUpdate(segment);
+
 			session.getTransaction().commit();
 			logger.info("Segment created correctly");
 		} catch (Exception exception) {
@@ -94,27 +107,44 @@ public class SegmentDAO {
 		Segment segment = createSegmentTransaction(points);
 		boolean result = false;
 		if (segment != null) {
-
-			Optional<Point> startPointOptional = pointDAO.findPointByGivenId(segment.getStartPointID());
-			Optional<Point> endPointOptional = pointDAO.findPointByGivenId(segment.getEndPointID());
-
-			if (startPointOptional.isPresent() && endPointOptional.isPresent()) {
-				assignSegmentToPoint(startPointOptional.get(), segment);
-				assignSegmentToPoint(endPointOptional.get(), segment);
-				result = true;
-			}
-
+			result = true;
 		}
 		return result;
 	}
 
-	void assignSegmentToPoint(Point point, Segment segment) {
-		Session session = SessionConnection.getSessionFactory().openSession();
-		session.beginTransaction();
-		segment.getPoints().add(point);
-		session.update(segment);
-		session.getTransaction().commit();
-		SessionConnection.shutdown(session);
+	public LinkedList<Point> createSegmentsFromFile() {
+
+		LinkedList<Point> points = new LinkedList<Point>();
+		double latitude, longitude;
+		try {
+
+			BufferedReader bufferedReader = new BufferedReader(new FileReader("src/main/resources/routes.txt"));
+			String fileLine;
+
+			while ((fileLine = bufferedReader.readLine()) != null) {
+
+				if (!fileLine.contains("next")) {
+					String[] coords = fileLine.split(",");
+					latitude = Double.parseDouble(coords[0]);
+					longitude = Double.parseDouble(coords[1]);
+					points.add(new Point(latitude, longitude));
+					} else {
+
+					
+				}
+				
+			}
+			bufferedReader.close();
+			for (Point point : points) {
+				System.out.println(point.getLat() + " " + point.getLng());
+			}
+
+		} catch (Exception exception) {
+			logger.info("File read error: " + exception);
+		}
+
+		return points;
+
 	}
 
 	public Optional<Segment> findSegmentByGivenID(int segment_id) {
@@ -151,42 +181,22 @@ public class SegmentDAO {
 
 	}
 
-	public LinkedHashMap<Segment, List<Point>> findAllSegmentsWithContainingPoints() throws Exception {
-
-		LinkedHashMap<Segment, List<Point>> segment_points_map = new LinkedHashMap<>();
-
-		List<Segment> segments;
-		segments = segmentDAO.findAllSegments();
-
-		for (Segment segment : segments) {
-			segment_points_map.put(segment, findAllPointsForSegmentByID(segment.getId()));
-		}
-		logger.info("All Segments with their points listed");
-		return segment_points_map;
-
-	}
-
 	@SuppressWarnings("unchecked")
-	public List<JSONObject> findAllSegmentsWithContainingPointsJSON() throws Exception {
-
-		// public LinkedHashMap<Segment, List<Point>> <- typ metody
-		LinkedHashMap<Segment, List<Point>> segment_points_map = new LinkedHashMap<>();
+	public List<JSONObject> findAllSegmentsWithContainingPoints() throws Exception {
 
 		List<Segment> segments;
-		
+
 		segments = segmentDAO.findAllSegments();
-		
+
 		List<JSONObject> jsonResponseArray = new JSONArray();
-		
 		for (Segment segment : segments) {
 			JSONObject jsonResponse = new JSONObject();
-			
-			segment_points_map.put(segment, findAllPointsForSegmentByID(segment.getId()));
-			jsonResponse.put("start_pointID", segment.getStartPointID());
-			jsonResponse.put("end_pointID", segment.getEndPointID());
+
+			jsonResponse.put("start_point", pointDAO.findPointByGivenId(segment.getStartPointID()).get());
+			jsonResponse.put("end_point", pointDAO.findPointByGivenId(segment.getEndPointID()).get());
 			jsonResponse.put("segment_id", segment.getId());
-			jsonResponse.put("points", segment_points_map.get(segment));
-			jsonResponseArray.add(jsonResponse);	
+			jsonResponse.put("points", findAllPointsForSegmentByID(segment.getId()));
+			jsonResponseArray.add(jsonResponse);
 		}
 		logger.info("All Segments with their points listed");
 		return jsonResponseArray;
@@ -208,7 +218,6 @@ public class SegmentDAO {
 		logger.debug("findAllPointsForSegment");
 		List<Point> points = segment.getPoints().stream().collect(Collectors.toList());
 		logger.info("All points for given Segment listed");
-		logger.info(segment.getPoints().stream().findFirst().get().getLat());
 		return points;
 	}
 

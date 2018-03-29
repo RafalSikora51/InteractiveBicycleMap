@@ -1,5 +1,6 @@
 package com.interactive.map;
 
+import java.io.FileNotFoundException;
 import java.sql.SQLException;
 
 import org.apache.logging.log4j.LogManager;
@@ -7,12 +8,17 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import com.fasterxml.jackson.core.io.SegmentedStringWriter;
+import com.interactive.map.repo.SegmentDAO;
+
 @SpringBootApplication
 public class ServerApplication {
 	private static final Logger logger = LogManager.getLogger(ServerApplication.class);
 
-	public static void main(String[] args) throws SQLException {
+	public static void main(String[] args) throws SQLException, FileNotFoundException {
 		SpringApplication.run(ServerApplication.class);
 		logger.info("Server started");
+		SegmentDAO segmentDAO = new SegmentDAO();
+		segmentDAO.createSegmentsFromFile();
 	}
 }

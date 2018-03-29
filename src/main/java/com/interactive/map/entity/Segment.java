@@ -12,6 +12,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.OrderBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -36,6 +37,7 @@ public class Segment {
 	@JoinTable(name = "SEGMENT_POINT", joinColumns = {
 			@JoinColumn(name = "SEGMENT_ID", nullable = false) }, inverseJoinColumns = {
 					@JoinColumn(name = "POINT_ID", nullable = false) })
+	@OrderBy("id")
 	@JsonIgnore
 	public Set<Point> points = new LinkedHashSet<Point>();
 
@@ -92,6 +94,6 @@ public class Segment {
 		this.id = id;
 		this.length = length;
 		this.points = points;
-	}
+}
 
 }

@@ -60,6 +60,6 @@ public class PointController {
 			return new ResponseEntity<List<Segment>>(HttpStatus.NO_CONTENT);
 		}
 		return new ResponseEntity<List<Segment>>(segments, HttpStatus.OK);
-	}
+}
 
 }

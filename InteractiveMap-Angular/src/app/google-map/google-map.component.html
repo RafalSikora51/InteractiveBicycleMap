@@ -20,15 +20,7 @@
   <div>
     <mat-sidenav-container class="example-container">
       <mat-sidenav mode="side" opened="true" position="end">
-        
-        <button mat-raised-button color="primary" (click)="addBicycleLayer()">Dodaj ścieżki do mapy</button>
-        <mat-divider></mat-divider>
-        <button mat-raised-button color="primary" (click)="removeBicycleLayer()">Usuń ścieżki z mapy aas </button>
-    
-
         <mat-nav-list>
-
-
           <a mat-list-item class="not-active">Menu</a>
           <mat-divider></mat-divider>
           <mat-divider></mat-divider>
@@ -36,7 +28,11 @@
           <mat-divider></mat-divider>
           <mat-divider></mat-divider>
           <mat-divider></mat-divider>
-          <a mat-list-item (click)="showTest()">Dodaj ścieżki do mapy</a>
+          <a mat-list-item (click)="addAllMarkersFromAPI()">Dodaj ścieżki do mapy</a>
+          <mat-divider></mat-divider>
+          <a mat-list-item (click)=" addBicycleLayer()">Wyświetl ścieżki</a>
+          <mat-divider></mat-divider>
+          <a mat-list-item (click)="drawPath()">Utwórz ścieżkę</a>
           <mat-divider></mat-divider>
           <a mat-list-item (click)="removeBicycleLayer()">Usuń ścieżki z mapy</a>
           <mat-divider></mat-divider>

@@ -12,7 +12,7 @@ import { SegmentPointSet } from '../Model/SegmentPointSet';
 export class SegmentService {
 
   private SEGMENTS_API_URL = 'http://localhost:9090/segments';
-  private SEGMENTSALL_API_URL = 'http://localhost:9090/segments/alljson';
+  private SEGMENTSALL_API_URL = 'http://localhost:9090/segments/all';
 
 
   constructor(private http: HttpClient) { }

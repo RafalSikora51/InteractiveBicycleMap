@@ -35,7 +35,7 @@ public class PointDAO {
 			SessionConnection.shutdown(session);
 			return false;
 		}
-	}
+}
 
 	public Point createPoint(double latitude, double longitude) {
 		Session session = SessionConnection.getSessionFactory().openSession();
@@ -47,7 +47,7 @@ public class PointDAO {
 		logger.info("Point from LAT LNG added correctly");
 		return point;
 
-	}
+}
 
 	@SuppressWarnings("unchecked")
 	public List<Point> findAllPoints() {
@@ -58,7 +58,7 @@ public class PointDAO {
 		SessionConnection.shutdown(session);
 		logger.info("All points listed.");
 		return points;
-	}
+}
 
 	public Optional<Point> findPointByGivenId(int pointId) {
 		logger.debug("findPointByGivenId");
@@ -73,7 +73,7 @@ public class PointDAO {
 			logger.info("There is no point with this ID");
 			return Optional.empty();
 		}
-	}
+}
 
 	@SuppressWarnings("unchecked")
 	public Optional<Point> findPointByLatLng(double latitude, double longitude) {
@@ -100,7 +100,7 @@ public class PointDAO {
 		} else {
 			return Optional.empty();
 		}
-	}
+}
 
 	public List<Segment> findAllSegmentsForPoint(Point point) {
 
@@ -119,6 +119,6 @@ public class PointDAO {
 			return findAllSegmentsForPoint(pointOptional.get());
 		} else
 			throw new Exception("Point not found");
-	}
+}
 
 }

@@ -8,10 +8,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
+import javax.persistence.OrderBy;
 import javax.persistence.Table;
-
-import org.aspectj.internal.lang.annotation.ajcDeclareAnnotation;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
@@ -30,9 +28,11 @@ public class Point {
 	private double longitude;
 
 	@ManyToMany(mappedBy = "points")
+	@OrderBy("id")
 	@JsonIgnore
 	private Set<Segment> segments = new LinkedHashSet<Segment>();
-	
+
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -114,5 +114,6 @@ public class Point {
 		this.longitude = lng;
 		this.segments = segments;
 	}
+
 
 }

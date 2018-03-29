@@ -1,6 +1,5 @@
 package com.interactive.map.controller;
 
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 
 import org.json.simple.JSONObject;
@@ -60,32 +59,20 @@ public class SegmentController {
 			return new ResponseEntity<List<Point>>(HttpStatus.NO_CONTENT);
 		}
 		return new ResponseEntity<List<Point>>(points, HttpStatus.OK);
-	}
+}
+
 
 	@RequestMapping(value = "/all", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
-	public ResponseEntity<LinkedHashMap<Segment, List<Point>>> findAllSegmentsWithContainingPoints() throws Exception {
-
-		LinkedHashMap<Segment, List<Point>> segment_points_map = segmentDAO.findAllSegmentsWithContainingPoints();
-
-		if (segment_points_map.isEmpty()) {
-			return new ResponseEntity<LinkedHashMap<Segment, List<Point>>>(HttpStatus.NO_CONTENT);
-		} else {
-			return new ResponseEntity<LinkedHashMap<Segment, List<Point>>>(segment_points_map, HttpStatus.OK);
-		}
-	}
-
-	@RequestMapping(value = "/alljson", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ResponseBody
 	public ResponseEntity<List<JSONObject>> findAllSegmentsWithContainingPointsJSON() throws Exception {
 
-		List<JSONObject> segment_points_map = segmentDAO.findAllSegmentsWithContainingPointsJSON();
+		List<JSONObject> segment_points_map = segmentDAO.findAllSegmentsWithContainingPoints();
 
 		if (segment_points_map.isEmpty()) {
 			return new ResponseEntity<List<JSONObject>>(HttpStatus.NO_CONTENT);
 		} else {
 			return new ResponseEntity<List<JSONObject>>(segment_points_map, HttpStatus.OK);
 		}
-	}
+}
 
 }
