@@ -17,7 +17,7 @@ import org.hibernate.Query;
 public class PointDAO {
 
 	@Autowired
-	PointDAO pointDAO;
+	private PointDAO pointDAO;
 
 	private static Logger logger = LogManager.getLogger(PointDAO.class);
 

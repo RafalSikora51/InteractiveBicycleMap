@@ -1,7 +1,7 @@
 package com.interactive.map.entity;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.LinkedList;
+import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -39,7 +39,7 @@ public class Segment {
 					@JoinColumn(name = "POINT_ID", nullable = false) })
 	@OrderBy("id")
 	@JsonIgnore
-	public Set<Point> points = new LinkedHashSet<Point>();
+	public List<Point> points;
 
 	public int getId() {
 		return id;
@@ -57,12 +57,12 @@ public class Segment {
 		this.length = length;
 	}
 
-	public Set<Point> getPoints() {
+	public List<Point> getPoints() {
 		return points;
 	}
 
-	public void setPoints(Set<Point> points) {
-		this.points = points;
+	public void setPoints(List<Point> points2) {
+		this.points = points2;
 	}
 
 	public int getStartPointID() {
@@ -90,7 +90,7 @@ public class Segment {
 		this.length = length;
 	}
 
-	public Segment(int id, double length, Set<Point> points) {
+	public Segment(int id, double length, LinkedList<Point> points) {
 		this.id = id;
 		this.length = length;
 		this.points = points;

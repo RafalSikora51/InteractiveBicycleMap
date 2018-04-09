@@ -1,7 +1,6 @@
 package com.interactive.map.entity;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -30,7 +29,7 @@ public class Point {
 	@ManyToMany(mappedBy = "points")
 	@OrderBy("id")
 	@JsonIgnore
-	private Set<Segment> segments = new LinkedHashSet<Segment>();
+	private List<Segment> segments;
 
 
 	@Override
@@ -85,11 +84,11 @@ public class Point {
 		this.longitude = lng;
 	}
 
-	public Set<Segment> getSegments() {
+	public List<Segment> getSegments() {
 		return segments;
 	}
 
-	public void setSegments(Set<Segment> segments) {
+	public void setSegments(List<Segment> segments) {
 		this.segments = segments;
 	}
 
@@ -108,7 +107,7 @@ public class Point {
 		this.longitude = lng;
 	}
 
-	public Point(int id, double lat, double lng, Set<Segment> segments) {
+	public Point(int id, double lat, double lng, List<Segment> segments) {
 		this.id = id;
 		this.latitude = lat;
 		this.longitude = lng;

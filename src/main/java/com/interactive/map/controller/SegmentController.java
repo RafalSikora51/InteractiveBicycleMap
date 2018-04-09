@@ -1,6 +1,6 @@
 package com.interactive.map.controller;
 
-import java.util.LinkedHashSet;
+import java.util.LinkedList;
 
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +37,7 @@ public class SegmentController {
 	public PointDAO pointDAO;
 
 	@RequestMapping(method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-	public boolean createSegment(@RequestBody LinkedHashSet<Point> points) {
+	public boolean createSegment(@RequestBody LinkedList<Point> points) {
 		return segmentDAO.createSegment(points);
 	}
 
@@ -59,8 +59,7 @@ public class SegmentController {
 			return new ResponseEntity<List<Point>>(HttpStatus.NO_CONTENT);
 		}
 		return new ResponseEntity<List<Point>>(points, HttpStatus.OK);
-}
-
+	}
 
 	@RequestMapping(value = "/all", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
@@ -73,6 +72,19 @@ public class SegmentController {
 		} else {
 			return new ResponseEntity<List<JSONObject>>(segment_points_map, HttpStatus.OK);
 		}
-}
+	}
+
+	@RequestMapping(value = "/test", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public boolean createSegmentFromFile() {
+
+		try {
+			segmentDAO.createSegmentsFromFile();
+		} catch (Exception exception) {
+			exception.getMessage();
+
+		}
+		return true;
+
+	}
 
 }
