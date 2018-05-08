@@ -66,7 +66,7 @@ public class PointDAO {
 		if (session.get(Point.class, pointId) != null) {
 			Point point = session.load(Point.class, pointId);
 			SessionConnection.shutdown(session);
-			logger.info("Point found by ID");
+			//logger.info("Point found by ID");
 			return Optional.ofNullable(point);
 		} else {
 			SessionConnection.shutdown(session);

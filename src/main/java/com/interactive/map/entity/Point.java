@@ -3,22 +3,30 @@ package com.interactive.map.entity;
 import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
+
+import org.hamcrest.core.Is;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "Point")
 public class Point {
 
+	boolean isAvailable;
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "POINT_ID", insertable = false, updatable = false)
 	private int id;
+
+	
 
 	@Column(name = "LATITUDE", nullable = false)
 	private double latitude;
@@ -26,11 +34,10 @@ public class Point {
 	@Column(name = "LONGITUDE", nullable = false)
 	private double longitude;
 
-	@ManyToMany(mappedBy = "points")
+	@ManyToMany(mappedBy = "points",  fetch = FetchType.EAGER)
 	@OrderBy("id")
 	@JsonIgnore
 	private List<Segment> segments;
-
 
 	@Override
 	public int hashCode() {
@@ -100,19 +107,26 @@ public class Point {
 		this.id = id;
 		this.latitude = lat;
 		this.longitude = lng;
+		this.isAvailable = true;
 	}
 
 	public Point(double lat, double lng) {
 		this.latitude = lat;
 		this.longitude = lng;
+		this.isAvailable = true;
 	}
 
 	public Point(int id, double lat, double lng, List<Segment> segments) {
 		this.id = id;
 		this.latitude = lat;
 		this.longitude = lng;
+		this.isAvailable = true;
 		this.segments = segments;
 	}
-
+	
+	@Override
+	public String toString() {
+		return "Point [id=" + id + ", longitude=" + longitude + ", latitude=" + latitude + "]";
+	}
 
 }

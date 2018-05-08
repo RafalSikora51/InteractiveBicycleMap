@@ -30,6 +30,12 @@ public class Segment {
 	@Column(name = "END_POINT_ID", nullable = false)
 	private int endPointID;
 
+	@Override
+	public String toString() {
+		return " Segment [id=" + id + ", startPointID=" + startPointID + ", endPointID=" + endPointID + ", length="
+				+ length + "]";
+	}
+
 	@Column(name = "LENGTH", nullable = false, unique = false)
 	private double length;
 

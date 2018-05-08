@@ -45,7 +45,7 @@ export class GoogleMapComponent implements OnInit {
     this.getSegments();
 
     const mapCanvas = document.getElementById('map');
-    const myCenter = new google.maps.LatLng(53.131083, 23.154742);
+    const myCenter = new google.maps.LatLng(53.11503, 23.16347);
     const mapOptions = {
       center: myCenter,
       zoom: 15,
@@ -56,6 +56,7 @@ export class GoogleMapComponent implements OnInit {
     google.maps.event.addListener(this.googleMap, 'click', (event) => {
       this.placeMarker(event);
     });
+
     this.markersArray.pop();
     this.markersArray.pop();
 
@@ -72,13 +73,43 @@ export class GoogleMapComponent implements OnInit {
       }
     );
   }
+
+
   placeMarker(event) {
 
     const marker = new google.maps.Marker({
       position: event.latLng,
       map: this.googleMap
     });
-    console.log('{"lat":' + event.latLng.lat() + ', "lng":' + event.latLng.lng() + '},');
+    console.log('' + event.latLng.lat() + ', ' + event.latLng.lng());
+
+    const tempInfo = '' + event.latLng.lat() + ', ' + event.latLng.lng();
+
+
+    const contentInfo = '<html>' +
+      '<head>' +
+      '<style>' +
+      '.gm-style-iw {' +
+      'background-color: grey;' +
+      '}' +
+      '</style>' +
+      '</head>' +
+      '<body>' +
+      '<div id="content">' +
+      '<p>' + + event.latLng.lat() + ', ' + event.latLng.lng() + '</p>' +
+      '</div>' +
+      '</body>' +
+      '</html>';
+
+    const info = new google.maps.InfoWindow({
+      content: contentInfo
+
+    });
+
+    marker.addListener('click', function () {
+      info.open(this.googleMap, marker);
+    });
+
 
     this.tempMarker.lat = event.latLng.lat();
     this.tempMarker.lng = event.latLng.lng();
@@ -104,7 +135,7 @@ export class GoogleMapComponent implements OnInit {
 
   addAllMarkersFromAPI() {
 
-    
+    // MARKERY POBIERANE Z BAZY NIE MAJĄ LISTENERA, NIE MOŻNA URUCHOMIĆ DYMKA
 
     let points = [];
     let marker;
@@ -134,7 +165,7 @@ export class GoogleMapComponent implements OnInit {
       });
 
       this.markersArray.push(start_markerTemp);
-
+/*
       points.forEach(point => {
         const markerTemp: Marker = { lat: 0, lng: 0 };
         markerTemp.lat = point.lat;
@@ -147,7 +178,7 @@ export class GoogleMapComponent implements OnInit {
           icon: 'http://maps.google.com/mapfiles/kml/pal4/icon49.png'
         });
       });
-
+*/
       this.markersArray.push(end_markerTemp);
     });
 
@@ -185,21 +216,3 @@ export class GoogleMapComponent implements OnInit {
   }
 }
 
-
-// addAllMarkersFromAPI() {
-//   let marker;
-//   this.addBicycleLayer();
-//   let points = [];
-//   this.segmentPointsSet.forEach(element => {
-//     points = element['points'];
-//     points.forEach(point => {
-//
-//       this.markersArray.push(markerTemp);
-//       marker = new google.maps.Marker({
-//         position: markerTemp,
-//         map: this.googleMap
-//       });
-//     });
-//   });
-//   console.log(this.markersArray);
-// }

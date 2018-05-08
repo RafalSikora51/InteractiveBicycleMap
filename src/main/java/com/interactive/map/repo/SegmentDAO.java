@@ -4,7 +4,9 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -17,7 +19,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import com.interactive.map.entity.Point;
 import com.interactive.map.entity.Segment;
+import com.interactive.map.util.Graph;
 import com.interactive.map.util.HarvesineFormula;
+import com.interactive.map.util.Node;
 import com.interactive.map.util.SessionConnection;
 
 @Component
@@ -28,6 +32,8 @@ public class SegmentDAO {
 
 	@Autowired
 	private SegmentDAO segmentDAO;
+
+	Graph graph = new Graph();
 
 	private static Logger logger = LogManager.getLogger(SegmentDAO.class);
 
@@ -65,16 +71,19 @@ public class SegmentDAO {
 				Point newPoint = pointDAO.createPoint(point.getLat(), point.getLng());
 				segment.setStartPointID(newPoint.getId());
 				points.removeIf(pointWithSameLatLng(newPoint));
+
 			}
 			if (endPoint.isPresent()) {
 				Point pointEnd = endPoint.get();
 				segment.setEndPointID(pointEnd.getId());
 				points.removeIf(pointWithSameLatLng(endPoint.get()));
+
 			} else {
 				Point endPointNotFound = points.stream().skip(points.size() - 1).findFirst().get();
 				Point newPoint = pointDAO.createPoint(endPointNotFound.getLat(), endPointNotFound.getLng());
 				segment.setEndPointID(newPoint.getId());
 				points.removeIf(pointWithSameLatLng(newPoint));
+
 			}
 
 			segment.setPoints(points);
@@ -114,7 +123,6 @@ public class SegmentDAO {
 				points.get(points.size() - 1).getLng());
 
 		Segment segment = null;
-
 		double length = -1;
 
 		Session session = SessionConnection.getSessionFactory().openSession();
@@ -140,16 +148,20 @@ public class SegmentDAO {
 				Point newPoint = pointDAO.createPoint(point.getLat(), point.getLng());
 				segment.setStartPointID(newPoint.getId());
 				points.removeIf(pointWithSameLatLng(newPoint));
+
 			}
 			if (endPoint.isPresent()) {
 				Point pointEnd = endPoint.get();
 				segment.setEndPointID(pointEnd.getId());
 				points.removeIf(pointWithSameLatLng(endPoint.get()));
+
 			} else {
 				Point endPointNotFound = points.stream().skip(points.size() - 1).findFirst().get();
 				Point newPoint = pointDAO.createPoint(endPointNotFound.getLat(), endPointNotFound.getLng());
 				segment.setEndPointID(newPoint.getId());
+
 				points.removeIf(pointWithSameLatLng(newPoint));
+
 			}
 
 			segment.setPoints(points);
@@ -166,6 +178,7 @@ public class SegmentDAO {
 		} finally {
 			SessionConnection.shutdown(session);
 		}
+
 		return segment;
 	}
 
@@ -203,6 +216,41 @@ public class SegmentDAO {
 		}
 		return length;
 	}
+	
+	public Node getNodeByGivenPoint(List<Node> nodes, Point point) {
+        Node node = null;
+        for (Node nodee : nodes) {
+            if (nodee.getPoint().equals(point)) {
+                node = nodee;
+            }
+        }
+        return node;
+    }
+
+	public Map<Node, Map<Node, Segment>> createAdjacencyMap(List<Node> nodes, List<Segment> segmentsFromDataBase) {
+		
+        Map<Node, Map<Node, Segment>> adjacencyMap = new HashMap<Node, Map<Node, Segment>>();
+ 
+        for (Node node : nodes) {
+            List<Segment> segmentsForNode = Graph.findSegmentsForNode(node, segmentsFromDataBase);
+            
+            Map<Node, Segment> vertexEdgeMap = new HashMap<Node, Segment>();
+ 
+            for (Segment seg : segmentsForNode) {
+                Point start = pointDAO.findPointByGivenId(seg.getStartPointID()).get();
+                Point end = pointDAO.findPointByGivenId(seg.getEndPointID()).get();
+                
+                // A nie może być sąsiadem A.
+                if (!start.equals(node.getPoint())) {
+                    vertexEdgeMap.put(getNodeByGivenPoint(nodes,start), seg);
+                } else {
+                    vertexEdgeMap.put(getNodeByGivenPoint(nodes,end), seg);
+                }
+            }
+            adjacencyMap.put(node, vertexEdgeMap);
+        }
+        return adjacencyMap;
+    }
 
 	@SuppressWarnings("unchecked")
 	public List<JSONObject> findAllSegmentsWithContainingPoints() throws Exception {
@@ -210,19 +258,48 @@ public class SegmentDAO {
 		List<Segment> segments;
 
 		segments = segmentDAO.findAllSegments();
-
+		List<Node> nodes = new ArrayList<Node>();
 		List<JSONObject> jsonResponseArray = new JSONArray();
+
 		for (Segment segment : segments) {
 			JSONObject jsonResponse = new JSONObject();
 
-			jsonResponse.put("start_point", pointDAO.findPointByGivenId(segment.getStartPointID()).get());
-			jsonResponse.put("end_point", pointDAO.findPointByGivenId(segment.getEndPointID()).get());
+			Point startPoint = pointDAO.findPointByGivenId(segment.getStartPointID()).get();
+			Point endPoint = pointDAO.findPointByGivenId(segment.getEndPointID()).get();
+
+			jsonResponse.put("start_point", startPoint);
+			jsonResponse.put("end_point", endPoint);
 			jsonResponse.put("segment_id", segment.getId());
 			jsonResponse.put("length", segment.getLength());
 			jsonResponse.put("points", findAllPointsForSegmentByID(segment.getId()));
 			jsonResponseArray.add(jsonResponse);
+
+			nodes.add(new Node(startPoint));
+			nodes.add(new Node(endPoint));
 		}
 		logger.info("All Segments with their points listed");
+
+		nodes = nodes.stream().distinct().collect(Collectors.toList());
+		
+		Map<Node, Map<Node,Segment>> adjacencyMap = createAdjacencyMap(nodes, segments);
+		
+		Graph graph = new Graph(nodes, adjacencyMap);
+		
+		Point sourcePoint = pointDAO.findPointByGivenId(51).get();
+		Node sourceNode = new Node(sourcePoint);
+		
+		Graph resultGraph = Graph.calculateShortestPathFromSource(graph, sourceNode);
+		
+		logger.info(adjacencyMap);
+		logger.info(graph);
+		logger.info("Pkt początkowy: "+ sourcePoint);
+		logger.info(resultGraph.getNodes().get(2).getShortestPath());
+		logger.info("Pkt końcowy: "+ resultGraph.getNodes().get(2));
+		
+		
+		
+		
+
 		return jsonResponseArray;
 	}
 

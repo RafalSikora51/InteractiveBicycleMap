@@ -74,7 +74,7 @@ public class SegmentController {
 		}
 	}
 
-	@RequestMapping(value = "/test", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@RequestMapping(value = "/add", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public boolean createSegmentFromFile() {
 
 		try {
