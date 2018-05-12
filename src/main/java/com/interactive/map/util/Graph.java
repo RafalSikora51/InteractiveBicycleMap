@@ -8,14 +8,34 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.interactive.map.entity.Point;
 import com.interactive.map.entity.Segment;
 
 import com.interactive.map.util.Node;
+import com.interactive.map.repo.PointDAO;
+import com.interactive.map.repo.SegmentDAO;
 
+@Component
 public class Graph {
 
 	// Węzły pobrane z bazy
+
+	@Autowired
+	private PointDAO pointDAO;
+
+	@Autowired
+	private SegmentDAO segmentDAO;
+	
+	Graph graph;
+
+	private static Logger logger = LogManager.getLogger(Graph.class);
 
 	private List<Node> nodes;
 
@@ -161,24 +181,95 @@ public class Graph {
 		return graph;
 	}
 
-	
-	//	 not finished
-	public List<Segment> createFinalRoad(Node startNode, Node endNode) {
+	public Node getNodeByGivenPoint(List<Node> nodes, Point point) {
+		Node node = null;
+		for (Node nodee : nodes) {
+			if (nodee.getPoint().equals(point)) {
+				node = nodee;
+			}
+		}
+		return node;
+	}
 
-		List<Segment> dijkstraRoad = new ArrayList<>();
+	public Map<Node, Map<Node, Segment>> createAdjacencyMap(List<Node> nodes, List<Segment> segmentsFromDataBase) {
 
-		//for (Entry<Node, Segment> adjacencyPair : adjacencyMap.get(startNode).entrySet()) {
+		Map<Node, Map<Node, Segment>> adjacencyMap = new HashMap<Node, Map<Node, Segment>>();
 
-		//	if(startNode.getPoint().getId() == adjacencyPair.getKey().getPoint().getId())
-			
-		//}
+		for (Node node : nodes) {
+			List<Segment> segmentsForNode = Graph.findSegmentsForNode(node, segmentsFromDataBase);
 
-		for (int i = 0; i < dijkstraRoad.size(); i++) {
-			System.out.println(dijkstraRoad.get(i));
+			Map<Node, Segment> vertexEdgeMap = new HashMap<Node, Segment>();
+
+			for (Segment seg : segmentsForNode) {
+				Point start = pointDAO.findPointByGivenId(seg.getStartPointID()).get();
+				Point end = pointDAO.findPointByGivenId(seg.getEndPointID()).get();
+
+				// A nie może być sąsiadem A.
+				if (!start.equals(node.getPoint())) {
+					vertexEdgeMap.put(getNodeByGivenPoint(nodes, start), seg);
+				} else {
+					vertexEdgeMap.put(getNodeByGivenPoint(nodes, end), seg);
+				}
+			}
+			adjacencyMap.put(node, vertexEdgeMap);
+		}
+		return adjacencyMap;
+	}
+
+	// not finished
+	public List<JSONObject> createDijkstraRoad(Node startNode) {
+
+		List<Segment> segments;
+
+		segments = segmentDAO.findAllSegments();
+
+		List<Node> nodes = new ArrayList<Node>();
+
+		List<JSONObject> jsonResponseArray = new JSONArray();
+
+		for (Segment segment : segments) {
+
+			Point startPoint = pointDAO.findPointByGivenId(segment.getStartPointID()).get();
+			Point endPoint = pointDAO.findPointByGivenId(segment.getEndPointID()).get();
+			nodes.add(new Node(startPoint));
+			nodes.add(new Node(endPoint));
 		}
 
-		return dijkstraRoad;
+		nodes = nodes.stream().distinct().collect(Collectors.toList());
+		
+		Graph graph = new Graph(nodes,adjacencyMap);
+		
+		Point sourcePoint = pointDAO.findPointByGivenId(1).get();
+		
+		Node sourceNode = new Node(sourcePoint);
+		
+		Graph resultGraph = calculateShortestPathFromSource(graph, sourceNode);
+		
 
+		// List<JSONObject> dijkstraRoad = new ArrayList<>();
+
+		// logger.info("CreateFinalRoad: ");
+		// logger.info(startNode);
+		// logger.info(startNode.getPoint());
+
+		// Graph resultGraph = calculateShortestPathFromSource(Graph graph, startNode);
+
+		// logger.info("Pkt początkowy: "+ startNode.getPoint());
+		// logger.info(resultGraph.getNodes().get(2).getShortestPath());
+		// logger.info("Pkt końcowy: "+ resultGraph.getNodes().get(3));
+
+		// for (Entry<Node, Segment> adjacencyPair :
+		// adjacencyMap.get(startNode).entrySet()) {
+
+		// }
+
+		//// for (int i = 0; i < dijkstraRoad.size(); i++) {
+		// System.out.println(dijkstraRoad.get(i));
+		// }
+
+		// }
+
+		return jsonResponseArray;
 	}
 
 	@Override

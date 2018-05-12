@@ -1,12 +1,16 @@
 package com.interactive.map.repo;
 
+import static org.junit.Assert.assertNotEquals;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -17,6 +21,8 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.interactive.map.entity.Point;
 import com.interactive.map.entity.Segment;
 import com.interactive.map.util.Graph;
@@ -216,41 +222,41 @@ public class SegmentDAO {
 		}
 		return length;
 	}
-	
+
 	public Node getNodeByGivenPoint(List<Node> nodes, Point point) {
-        Node node = null;
-        for (Node nodee : nodes) {
-            if (nodee.getPoint().equals(point)) {
-                node = nodee;
-            }
-        }
-        return node;
-    }
+		Node node = null;
+		for (Node nodee : nodes) {
+			if (nodee.getPoint().equals(point)) {
+				node = nodee;
+			}
+		}
+		return node;
+	}
 
 	public Map<Node, Map<Node, Segment>> createAdjacencyMap(List<Node> nodes, List<Segment> segmentsFromDataBase) {
-		
-        Map<Node, Map<Node, Segment>> adjacencyMap = new HashMap<Node, Map<Node, Segment>>();
- 
-        for (Node node : nodes) {
-            List<Segment> segmentsForNode = Graph.findSegmentsForNode(node, segmentsFromDataBase);
-            
-            Map<Node, Segment> vertexEdgeMap = new HashMap<Node, Segment>();
- 
-            for (Segment seg : segmentsForNode) {
-                Point start = pointDAO.findPointByGivenId(seg.getStartPointID()).get();
-                Point end = pointDAO.findPointByGivenId(seg.getEndPointID()).get();
-                
-                // A nie może być sąsiadem A.
-                if (!start.equals(node.getPoint())) {
-                    vertexEdgeMap.put(getNodeByGivenPoint(nodes,start), seg);
-                } else {
-                    vertexEdgeMap.put(getNodeByGivenPoint(nodes,end), seg);
-                }
-            }
-            adjacencyMap.put(node, vertexEdgeMap);
-        }
-        return adjacencyMap;
-    }
+
+		Map<Node, Map<Node, Segment>> adjacencyMap = new HashMap<Node, Map<Node, Segment>>();
+
+		for (Node node : nodes) {
+			List<Segment> segmentsForNode = Graph.findSegmentsForNode(node, segmentsFromDataBase);
+
+			Map<Node, Segment> vertexEdgeMap = new HashMap<Node, Segment>();
+
+			for (Segment seg : segmentsForNode) {
+				Point start = pointDAO.findPointByGivenId(seg.getStartPointID()).get();
+				Point end = pointDAO.findPointByGivenId(seg.getEndPointID()).get();
+
+				// A nie może być sąsiadem A.
+				if (!start.equals(node.getPoint())) {
+					vertexEdgeMap.put(getNodeByGivenPoint(nodes, start), seg);
+				} else {
+					vertexEdgeMap.put(getNodeByGivenPoint(nodes, end), seg);
+				}
+			}
+			adjacencyMap.put(node, vertexEdgeMap);
+		}
+		return adjacencyMap;
+	}
 
 	@SuppressWarnings("unchecked")
 	public List<JSONObject> findAllSegmentsWithContainingPoints() throws Exception {
@@ -280,27 +286,86 @@ public class SegmentDAO {
 		logger.info("All Segments with their points listed");
 
 		nodes = nodes.stream().distinct().collect(Collectors.toList());
-		
-		Map<Node, Map<Node,Segment>> adjacencyMap = createAdjacencyMap(nodes, segments);
-		
+
+		Map<Node, Map<Node, Segment>> adjacencyMap = createAdjacencyMap(nodes, segments);
+
 		Graph graph = new Graph(nodes, adjacencyMap);
-		
-		Point sourcePoint = pointDAO.findPointByGivenId(51).get();
+
+		// PUNKT STARTOWY ( PO ID)
+		Point sourcePoint = pointDAO.findPointByGivenId(120).get();
 		Node sourceNode = new Node(sourcePoint);
-		
+
 		Graph resultGraph = Graph.calculateShortestPathFromSource(graph, sourceNode);
-		
+		Map<Node, Segment> adjacencyNodeForJSON = new HashMap<>();
+		List<JSONObject> responseRoad = new JSONArray();
 		logger.info(adjacencyMap);
 		logger.info(graph);
-		logger.info("Pkt początkowy: "+ sourcePoint);
-		logger.info(resultGraph.getNodes().get(2).getShortestPath());
-		logger.info("Pkt końcowy: "+ resultGraph.getNodes().get(2));
-		
-		
-		
-		
+		logger.info("Result graph nodes: " + resultGraph.getNodes());
+		//logger.info("Pkt początkowy: " + sourcePoint);
+	//	logger.info(resultGraph.getNodes().get(20).getShortestPath());
 
-		return jsonResponseArray;
+		// PUNKT KOŃCOWY, TRZEBA WZIĄĆ PO ID Z GETNODES()
+		List<Node> shortestPath = resultGraph.getNodes().get(1).getShortestPath();
+
+		logger.info("Pkt końcowy: " + resultGraph.getNodes().get(1));
+		int j = 0;
+		for (int i = 1; i < shortestPath.size(); i++) {
+
+			JSONObject jsonResponse = new JSONObject();
+			j = i;
+			logger.info("Dla którego node'a szukamy : " + shortestPath.get(i - 1));
+			adjacencyNodeForJSON = adjacencyMap.get(shortestPath.get(i - 1));
+
+			logger.info("Co uzyskalem: ");
+			logger.info(adjacencyNodeForJSON.get(shortestPath.get(j)));
+			logger.info(adjacencyNodeForJSON.get(shortestPath.get(j)).points);
+
+			Point startPoint = pointDAO
+					.findPointByGivenId(adjacencyNodeForJSON.get(shortestPath.get(j)).getStartPointID()).get();
+			Point endPoint = pointDAO.findPointByGivenId(adjacencyNodeForJSON.get(shortestPath.get(j)).getEndPointID())
+					.get();
+
+			if (checkSegmentOrder(shortestPath.get(i - 1).getPoint(),
+					adjacencyNodeForJSON.get(shortestPath.get(j))) == true) {
+				
+				jsonResponse.put("start_point", startPoint);
+				jsonResponse.put("end_point", endPoint);
+				jsonResponse.put("segment_id", adjacencyNodeForJSON.get(shortestPath.get(j)).getId());
+				jsonResponse.put("length", adjacencyNodeForJSON.get(shortestPath.get(j)).getLength());
+				jsonResponse.put("points", findAllPointsForSegmentByID(adjacencyNodeForJSON.get(shortestPath.get(j)).getId()));
+				responseRoad.add(jsonResponse);
+				
+			}else {
+				jsonResponse.put("start_point", endPoint);
+				jsonResponse.put("end_point", startPoint);
+				jsonResponse.put("segment_id",adjacencyNodeForJSON.get(shortestPath.get(j)).getId());
+				jsonResponse.put("length", adjacencyNodeForJSON.get(shortestPath.get(j)).getLength());
+				List<Point> points = findAllPointsForSegmentByID(adjacencyNodeForJSON.get(shortestPath.get(j)).getId());
+				Collections.reverse(points);
+				jsonResponse.put("points", points);
+				responseRoad.add(jsonResponse);
+			}
+
+			
+
+			j = 0;
+		}
+
+		logger.info("FINALLY: ");
+		logger.info(responseRoad);
+		
+		//	JEŻELI WYŚWIETLIĆ CAŁĄ BAZĘ TO - return jsonResponseArray
+		return responseRoad;
+	}
+
+	boolean checkSegmentOrder(Point point, Segment segment) {
+
+		if (point.getId() == segment.getStartPointID()) {
+			return true;
+		} else {
+			return false;
+		}
+
 	}
 
 	public List<Point> findAllPointsForSegmentByID(int segment_id) throws Exception {

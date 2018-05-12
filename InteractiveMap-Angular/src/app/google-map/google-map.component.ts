@@ -96,7 +96,7 @@ export class GoogleMapComponent implements OnInit {
       '</head>' +
       '<body>' +
       '<div id="content">' +
-      '<p>' + + event.latLng.lat() + ', ' + event.latLng.lng() + '</p>' +
+      '<p>' + event.latLng.lat() + ', ' + event.latLng.lng() + '</p>' +
       '</div>' +
       '</body>' +
       '</html>';
@@ -124,7 +124,7 @@ export class GoogleMapComponent implements OnInit {
       path: this.markersArray,
       geodesic: true,
       editable: false,
-      strokeColor: '#0065ff',
+      strokeColor: '#00FF00',
       strokeOpacity: 0.5,
       strokeWeight: 6,
     });
@@ -156,29 +156,59 @@ export class GoogleMapComponent implements OnInit {
 
       marker = new google.maps.Marker({
         position: start_markerTemp,
-        map: this.googleMap
+        map: this.googleMap,
+        title: 'id: ' + start_point.id + ', latlng: ' + start_point.lat + '    ' + start_point.lng
+        // tslint:disable-next-line:max-line-length
+
       });
 
       marker = new google.maps.Marker({
         position: end_markerTemp,
-        map: this.googleMap
+        map: this.googleMap,
+        title:'id: ' + end_point.id + ', latlng: ' + ' ' + end_point.lat + '    ' + end_point.lng,
+        // tslint:disable-next-line:max-line-length
+
+      });
+
+      marker.addListener('click', function () {
+        info.open(this.googleMap, marker);
+      });
+
+      const contentInfo = '<html>' +
+        '<head>' +
+        '<style>' +
+        '.gm-style-iw {' +
+        'background-color: grey;' +
+        '}' +
+        '</style>' +
+        '</head>' +
+        '<body>' +
+        '<div id="content">' +
+        '<p>' + + start_markerTemp.lat + ', ' + start_markerTemp.lng + '</p>' +
+        '</div>' +
+        '</body>' +
+        '</html>';
+
+      const info = new google.maps.InfoWindow({
+        content: contentInfo
+
       });
 
       this.markersArray.push(start_markerTemp);
-/*
+
       points.forEach(point => {
         const markerTemp: Marker = { lat: 0, lng: 0 };
         markerTemp.lat = point.lat;
         markerTemp.lng = point.lng;
         this.markersArray.push(markerTemp);
 
-        marker = new google.maps.Marker({
-          position: markerTemp,
-          map: this.googleMap,
-          icon: 'http://maps.google.com/mapfiles/kml/pal4/icon49.png'
-        });
+        //      marker = new google.maps.Marker({
+        //      position: markerTemp,
+        //     map: this.googleMap,
+        //    icon: 'http://maps.google.com/mapfiles/kml/pal4/icon49.png'
+        //  });
       });
-*/
+
       this.markersArray.push(end_markerTemp);
     });
 
