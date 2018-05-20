@@ -36,15 +36,9 @@
           <mat-divider></mat-divider>
           <a mat-list-item (click)="removeBicycleLayer()">Usuń ścieżki z mapy</a>
           <mat-divider></mat-divider>
+          <a mat-list-item (click)="getShortestPath()">Dijkstra</a>
+          <mat-divider></mat-divider>
           <a mat-list-item (click)="showArrayMarkers()">Wyświetl dodane koordynaty</a>
-          <mat-card>
-            <mat-card-header>Koordynaty</mat-card-header>
-            <mat-card-content *ngIf="showArray">
-              <a mat-list-item *ngFor="let marker of markersArray"> {{marker.lat}}  {{marker.lng}}</a>
-              <mat-divider></mat-divider>
-              <mat-divider></mat-divider>
-            </mat-card-content>
-          </mat-card>
         </mat-nav-list>
 
       </mat-sidenav>

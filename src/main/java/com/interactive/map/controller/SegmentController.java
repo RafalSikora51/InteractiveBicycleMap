@@ -47,8 +47,9 @@ public class SegmentController {
 		List<Segment> segments = segmentDAO.findAllSegments();
 		if (segments.isEmpty()) {
 			return new ResponseEntity<List<Segment>>(HttpStatus.NO_CONTENT);
-		} else
+		} else {
 			return new ResponseEntity<List<Segment>>(segments, HttpStatus.OK);
+		}
 	}
 
 	@RequestMapping(value = "/{segment_id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -57,8 +58,9 @@ public class SegmentController {
 		List<Point> points = segmentDAO.findAllPointsForSegmentByID(segment_id);
 		if (points.isEmpty()) {
 			return new ResponseEntity<List<Point>>(HttpStatus.NO_CONTENT);
+		} else {
+			return new ResponseEntity<List<Point>>(points, HttpStatus.OK);
 		}
-		return new ResponseEntity<List<Point>>(points, HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "/all", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -74,6 +76,7 @@ public class SegmentController {
 		}
 	}
 
+	
 	@RequestMapping(value = "/add", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public boolean createSegmentFromFile() {
 
@@ -81,7 +84,6 @@ public class SegmentController {
 			segmentDAO.createSegmentsFromFile();
 		} catch (Exception exception) {
 			exception.getMessage();
-
 		}
 		return true;
 

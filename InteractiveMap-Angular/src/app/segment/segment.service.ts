@@ -13,6 +13,7 @@ export class SegmentService {
 
   private SEGMENTS_API_URL = 'http://localhost:9090/segments';
   private SEGMENTSALL_API_URL = 'http://localhost:9090/segments/all';
+  private DIJKSTRA = 'http://localhost:9090/graph/dijkstra/';
 
 
   constructor(private http: HttpClient) { }
@@ -31,6 +32,15 @@ export class SegmentService {
   }
   private log(message: string) {
     console.log(message);
+  }
+
+  public shortestDijkstraPath(startID: number, endID: number): Observable<SegmentPointSet[]> {
+    return this.http.get<any>(this.DIJKSTRA + `/${startID}/${endID}`)
+    .pipe(
+      tap(segments => this.log(`fetched shortest Dijkstra Path`)),
+      catchError(this.handleError('SegmentPointSet', []))
+    );
+
   }
 
   public getAllSegments(): Observable<Segment[]> {
