@@ -14,6 +14,8 @@ export class SegmentService {
   private SEGMENTS_API_URL = 'http://localhost:9090/segments';
   private SEGMENTSALL_API_URL = 'http://localhost:9090/segments/all';
   private DIJKSTRA = 'http://localhost:9090/graph/dijkstra/';
+  private NODES_API_URL = 'http://localhost:9090/graph/nodes';
+ 
 
 
   constructor(private http: HttpClient) { }
@@ -64,6 +66,14 @@ export class SegmentService {
       .pipe(
         tap(segments => this.log(`fetched all segments with all points`)),
         catchError(this.handleError('getallSegmentsWithPoints', []))
+      );
+  }
+
+  public getAllNodes(): Observable<Segment[]> {
+    return this.http.get<any>(this.NODES_API_URL)
+      .pipe(
+        tap(segments => this.log(`fetched nodes`)),
+        catchError(this.handleError('getAllNodes', []))
       );
   }
 

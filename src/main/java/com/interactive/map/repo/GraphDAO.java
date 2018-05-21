@@ -62,8 +62,7 @@ public class GraphDAO {
 		return node;
 	}
 
-	
-	//zmienic na optionala, bo jesli np jakims cudem podamy id punktu,
+	// zmienic na optionala, bo jesli np jakims cudem podamy id punktu,
 	// dla ktoego nie bedzie stworzonego nodea, to wywali null
 	// wtedy w metodach w ktorych to bedzie uzywane, trzeba sprawdzic czy ten
 	// Optional.isPresent()
@@ -82,7 +81,7 @@ public class GraphDAO {
 	 * 
 	 * jeżeli
 	 */
-	
+
 	public static List<Segment> findSegmentsForNode(Node node, List<Segment> segments) {
 		List<Segment> resultList = segments.stream().filter(seg -> (seg.getStartPointID() == node.getPoint().getId()
 				|| seg.getEndPointID() == node.getPoint().getId())).collect(Collectors.toList());
@@ -206,13 +205,131 @@ public class GraphDAO {
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<JSONObject> getShortestPathFromStartNodeToEndNode(int startId, int endId) throws Exception {
+	public List<JSONObject> getShortestPathFromList(List<Integer> chosenPointsID) throws Exception {
+
+		List<JSONObject> jsonArrayResponse = new JSONArray();
+
+		List<Node> nodes = findAllNodes();
+
+		
+
+		
+
+		
+
+		for (int i = 1; i < chosenPointsID.size(); i++) {
+			Map<Node, Map<Node, Segment>> adjacencyMap = createAdjacencyMap(nodes);        
+			Graph graph = new Graph(nodes, adjacencyMap);
+			calculateShortestPathFromSource(graph, getNodeByGivenPointId(nodes, chosenPointsID.get(i-1)));
+			
+
+			jsonArrayResponse.addAll(getShortestPathFromStartNodeToEndNode(graph, nodes, chosenPointsID.get(i - 1),
+					chosenPointsID.get(i)));
+		}
+
+		return jsonArrayResponse;
+
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<JSONObject> getShortestPathFromStartNodeToEndNode(Graph graph, List<Node> nodes, int startId, int endId)
+			throws Exception {
+
+		Optional<Point> sourcePointOptional = pointDAO.findPointByGivenId(startId);
+
+		List<JSONObject> responseRoad = new JSONArray();
+
+		if (sourcePointOptional.isPresent()) {
+
+			Node endNode = getNodeByGivenPointId(nodes, endId);
+
+			
+
+			List<Node> shortestPath = endNode.getShortestPath();
+			shortestPath.add(endNode);
+			logger.info("sciezka: "+shortestPath);
+
+			int startIndex = 0;
+			for (int i = 0; i < shortestPath.size(); i++) {
+				if (shortestPath.get(i).getPoint().getId() == startId) {
+					startIndex = i;
+					break;
+				}
+			}
+
+			for (int i = startIndex + 1; i < shortestPath.size(); i++) {
+				
+				Node actualNode = getNodeByGivenPointId(nodes, shortestPath.get(i).getPoint().getId());  // koniec pary 
+				Node beforeNode = getNodeByGivenPointId(nodes, shortestPath.get(i - 1).getPoint().getId());  // poczatek pary 
+				
+				
+				Map<Node, Segment> adjacencyNodeForJSON = graph.getAdjacencyList().get(beforeNode);
+				Segment segmentBetweenBeforeAndActual = adjacencyNodeForJSON.get(actualNode); // krawedz laczaca pcozatek - koniec ( PARY NIE CALEJ SCIEZKI)
+				
+				logger.info("before " + beforeNode);
+				logger.info("actual " + actualNode);
+				
+				logger.info("segment " + segmentBetweenBeforeAndActual);
+				
+				
+//				JSONObject jsonResponse = new JSONObject();
+//				adjacencyNodeForJSON = graph.getAdjacencyList().get(shortestPath.get(i));
+//				logger.info("przed");
+//				logger.info(" im here "+ adjacencyNodeForJSON);
+//				logger.info("po");
+				
+				//Point startPoint = pointDAO
+				//		.findPointByGivenId(adjacencyNodeForJSON.get().get();
+			}
+
+//			int j = 0;
+//			for (int i = startIndex; i < shortestPath.size(); i++) {
+//
+//				JSONObject jsonResponse = new JSONObject();
+//				j = i;
+//				// logger.info("Dla którego node'a szukamy : " + shortestPath.get(i - 1));
+//				adjacencyNodeForJSON = graph.getAdjacencyList().get(shortestPath.get(i));
+//
+//				Point startPoint = pointDAO
+//						.findPointByGivenId(adjacencyNodeForJSON.get(shortestPath.get(j)).getStartPointID()).get();
+//				Point endPoint = pointDAO
+//						.findPointByGivenId(adjacencyNodeForJSON.get(shortestPath.get(j)).getEndPointID()).get();
+//
+//				if (segmentDAO.checkSegmentOrder(shortestPath.get(i).getPoint(),
+//						adjacencyNodeForJSON.get(shortestPath.get(j))) == true) {
+//
+//					jsonResponse.put("start_point", startPoint);
+//					jsonResponse.put("end_point", endPoint);
+//					jsonResponse.put("segment_id", adjacencyNodeForJSON.get(shortestPath.get(j)).getId());
+//					jsonResponse.put("length", adjacencyNodeForJSON.get(shortestPath.get(j)).getLength());
+//					jsonResponse.put("points", segmentDAO
+//							.findAllPointsForSegmentByID(adjacencyNodeForJSON.get(shortestPath.get(j)).getId()));
+//					responseRoad.add(jsonResponse);
+//				} else {
+//					jsonResponse.put("start_point", endPoint);
+//					jsonResponse.put("end_point", startPoint);
+//					jsonResponse.put("segment_id", adjacencyNodeForJSON.get(shortestPath.get(j)).getId());
+//					jsonResponse.put("length", adjacencyNodeForJSON.get(shortestPath.get(j)).getLength());
+//					List<Point> points = segmentDAO
+//							.findAllPointsForSegmentByID(adjacencyNodeForJSON.get(shortestPath.get(j)).getId());
+//					Collections.reverse(points);
+//					jsonResponse.put("points", points);
+//					responseRoad.add(jsonResponse);
+//				}
+//				j = 0;
+//			}
+		}
+		return responseRoad;
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<JSONObject> getShortestPathFromStartNodeToEndNodeOLD(int startId, int endId) throws Exception {
 		List<JSONObject> responseRoad = new JSONArray();
 
 		List<Node> nodes = findAllNodes();
 		Map<Node, Map<Node, Segment>> adjacencyMap = createAdjacencyMap(nodes);
 
-		Graph graph = new Graph(nodes, adjacencyMap);
+		Graph graphOLD = new Graph(nodes, adjacencyMap);
 
 		Optional<Point> sourcePointOptional = pointDAO.findPointByGivenId(startId);
 
@@ -224,7 +341,7 @@ public class GraphDAO {
 
 			Map<Node, Segment> adjacencyNodeForJSON = new HashMap<>();
 
-			calculateShortestPathFromSource(graph, sourceNode);
+			calculateShortestPathFromSource(graphOLD, sourceNode);
 
 			List<Node> shortestPath = endNode.getShortestPath();
 			shortestPath.add(endNode);
@@ -269,7 +386,5 @@ public class GraphDAO {
 		}
 		return responseRoad;
 	}
-	
-	
 
 }

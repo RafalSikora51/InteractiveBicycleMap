@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -53,11 +54,22 @@ public class GraphController {
 		}
 	}
 
+	@RequestMapping(value = "/dijkstra", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+	@ResponseBody
+	public ResponseEntity<List<JSONObject>> getShortestPathFromStartNodeToEndNode(@RequestBody List<Integer> chosenNodes) throws Exception {
+		List<JSONObject> shortestPath = graphDao.getShortestPathFromList(chosenNodes);
+		if (shortestPath.isEmpty()) {
+			return new ResponseEntity<List<JSONObject>>(HttpStatus.NO_CONTENT);
+		} else {
+			return new ResponseEntity<List<JSONObject>>(shortestPath, HttpStatus.OK);
+		}
+	}
+	
 	@RequestMapping(value = "/dijkstra/{startId}/{endId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
 	public ResponseEntity<List<JSONObject>> getShortestPathFromStartNodeToEndNode(@PathVariable int startId,
 			@PathVariable int endId) throws Exception {
-		List<JSONObject> shortestPath = graphDao.getShortestPathFromStartNodeToEndNode(startId, endId);
+		List<JSONObject> shortestPath = graphDao.getShortestPathFromStartNodeToEndNodeOLD(startId, endId);
 		if (shortestPath.isEmpty()) {
 			return new ResponseEntity<List<JSONObject>>(HttpStatus.NO_CONTENT);
 		} else {
