@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { catchError, map, tap } from 'rxjs/operators';
 import { of } from 'rxjs/observable/of';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/operator/map';
@@ -15,7 +15,7 @@ export class SegmentService {
   private SEGMENTSALL_API_URL = 'http://localhost:9090/segments/all';
   private DIJKSTRA = 'http://localhost:9090/graph/dijkstra/';
   private NODES_API_URL = 'http://localhost:9090/graph/nodes';
- 
+  private DIJKSTRALIST_API_URL = 'http://localhost:9090/graph/dijkstra';
 
 
   constructor(private http: HttpClient) { }
@@ -38,10 +38,10 @@ export class SegmentService {
 
   public shortestDijkstraPath(startID: number, endID: number): Observable<SegmentPointSet[]> {
     return this.http.get<any>(this.DIJKSTRA + `/${startID}/${endID}`)
-    .pipe(
-      tap(segments => this.log(`fetched shortest Dijkstra Path`)),
-      catchError(this.handleError('SegmentPointSet', []))
-    );
+      .pipe(
+        tap(segments => this.log(`fetched shortest Dijkstra Path`)),
+        catchError(this.handleError('SegmentPointSet', []))
+      );
 
   }
 
@@ -75,6 +75,15 @@ export class SegmentService {
         tap(segments => this.log(`fetched nodes`)),
         catchError(this.handleError('getAllNodes', []))
       );
+  }
+
+  public dijkstraOnList(markers: any[]): Observable<any> {
+
+    return this.http.post(this.DIJKSTRALIST_API_URL, markers)
+    .pipe(
+      catchError(this.handleError('addHero', markers))
+    );
+
   }
 
 

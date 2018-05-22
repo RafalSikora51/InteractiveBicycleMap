@@ -146,6 +146,107 @@ public class GraphDAO {
 		}
 	}
 
+	public Graph calculateShortestPathFromSourceBellmanFord(Graph graph, Node source) {
+
+		Map<Node, Map<Node, Segment>> adjacencyMap = graph.getAdjacencyList();
+
+		source.setDistance(0.0);
+
+		for (Entry<Node, Segment> adjacencyPair : adjacencyMap.get(source).entrySet()) {
+
+			Node currentNode = source;
+
+			Node adjacentNode = adjacencyPair.getKey();
+			Segment segment = adjacencyPair.getValue();
+			calculateMinimumDistance(adjacentNode, segment, currentNode);
+		}
+
+		for (int i = 0; i < adjacencyMap.keySet().size() - 1; i++) {
+
+			for (Node keyNode : adjacencyMap.keySet()) {
+
+				if (keyNode.getDistance() != Double.MAX_VALUE) {
+
+					for (Entry<Node, Segment> adjacencyPair : adjacencyMap.get(keyNode).entrySet()) {
+
+						Node currentNode = keyNode;
+
+						Node adjacentNode = adjacencyPair.getKey();
+						Segment segment = adjacencyPair.getValue();
+						calculateMinimumDistance(adjacentNode, segment, currentNode);
+					}
+				}
+			}
+		}
+
+		logger.info("dla id=1: " + getNodeByGivenPointId(graph.getNodes(), 1).getShortestPath());
+		logger.info("dla id=34: " + getNodeByGivenPointId(graph.getNodes(), 34).getShortestPath());
+
+		return graph;
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<JSONObject> getShortestPathFromStartNodeToEndNodeBELLMAN(int startId, int endId) throws Exception {
+		List<JSONObject> responseRoad = new JSONArray();
+
+		List<Node> nodes = findAllNodes();
+		Map<Node, Map<Node, Segment>> adjacencyMap = createAdjacencyMap(nodes);
+		Graph graph = new Graph(nodes, adjacencyMap);
+		calculateShortestPathFromSourceBellmanFord(graph, getNodeByGivenPointId(nodes, startId));
+
+		Optional<Point> sourcePointOptional = pointDAO.findPointByGivenId(startId);
+		Optional<Point> endPointOptional = pointDAO.findPointByGivenId(endId);
+
+		if (sourcePointOptional.isPresent() && endPointOptional.isPresent()) {
+			Node endNode = getNodeByGivenPointId(nodes, endId);
+
+			List<Node> shortestPath = endNode.getShortestPath();
+			List<Node> pathWithEndNode = new ArrayList<>(shortestPath);
+			pathWithEndNode.add(endNode);
+
+			logger.info("sciezka: " + pathWithEndNode);
+
+			int startIndex = getIndexWhenToStart(pathWithEndNode, startId);
+			if (startIndex != -1) {
+				for (int i = startIndex + 1; i < pathWithEndNode.size(); i++) {
+
+					JSONObject jsonResponse = new JSONObject();
+					Node actualNode = getNodeByGivenPointId(nodes, pathWithEndNode.get(i).getPoint().getId()); // koniec
+					Node beforeNode = getNodeByGivenPointId(nodes, pathWithEndNode.get(i - 1).getPoint().getId()); // poczatek
+
+					Map<Node, Segment> adjacencyNodeForJSON = graph.getAdjacencyList().get(beforeNode);
+					Segment segmentBetweenBeforeAndActual = adjacencyNodeForJSON.get(actualNode);
+
+					logger.info("before " + beforeNode);
+					logger.info("actual " + actualNode);
+					logger.info("segment " + segmentBetweenBeforeAndActual);
+
+					if (!segmentDAO.checkSegmentOrder(beforeNode.getPoint(), segmentBetweenBeforeAndActual)) {
+						jsonResponse.put("start_point", beforeNode.getPoint());
+						jsonResponse.put("end_point", actualNode.getPoint());
+						jsonResponse.put("segment_id", segmentBetweenBeforeAndActual.getId());
+						jsonResponse.put("length", segmentBetweenBeforeAndActual.getLength());
+						List<Point> points = segmentDAO
+								.findAllPointsForSegmentByID(segmentBetweenBeforeAndActual.getId());
+						Collections.reverse(points);
+						jsonResponse.put("points", points);
+						responseRoad.add(jsonResponse);
+					} else {
+
+						jsonResponse.put("start_point", beforeNode.getPoint());
+						jsonResponse.put("end_point", actualNode.getPoint());
+						jsonResponse.put("segment_id", segmentBetweenBeforeAndActual.getId());
+						jsonResponse.put("length", segmentBetweenBeforeAndActual.getLength());
+						jsonResponse.put("points",
+								segmentDAO.findAllPointsForSegmentByID(segmentBetweenBeforeAndActual.getId()));
+						responseRoad.add(jsonResponse);
+					}
+				}
+			}
+		}
+		return responseRoad;
+	}
+
 	// dijkstra method
 	public Graph calculateShortestPathFromSource(Graph graph, Node source) {
 		source.setDistance(0.0);
@@ -208,183 +309,108 @@ public class GraphDAO {
 	public List<JSONObject> getShortestPathFromList(List<Integer> chosenPointsID) throws Exception {
 
 		List<JSONObject> jsonArrayResponse = new JSONArray();
-
-		List<Node> nodes = findAllNodes();
-
-		
-
-		
-
-		
-
 		for (int i = 1; i < chosenPointsID.size(); i++) {
-			Map<Node, Map<Node, Segment>> adjacencyMap = createAdjacencyMap(nodes);        
-			Graph graph = new Graph(nodes, adjacencyMap);
-			calculateShortestPathFromSource(graph, getNodeByGivenPointId(nodes, chosenPointsID.get(i-1)));
-			
 
-			jsonArrayResponse.addAll(getShortestPathFromStartNodeToEndNode(graph, nodes, chosenPointsID.get(i - 1),
-					chosenPointsID.get(i)));
+			int sourceId = chosenPointsID.get(i - 1);
+			int endId = chosenPointsID.get(i);
+
+			List<JSONObject> shortestPathFromStartNodeToEndNode = getShortestPathFromStartNodeToEndNode(sourceId,
+					endId);
+			jsonArrayResponse.addAll(shortestPathFromStartNodeToEndNode);
 		}
-
 		return jsonArrayResponse;
-
 	}
-
+	
 	@SuppressWarnings("unchecked")
-	public List<JSONObject> getShortestPathFromStartNodeToEndNode(Graph graph, List<Node> nodes, int startId, int endId)
-			throws Exception {
+	public List<JSONObject> getShortestPathFromListBELLMAN(List<Integer> chosenPointsID) throws Exception {
 
-		Optional<Point> sourcePointOptional = pointDAO.findPointByGivenId(startId);
+		List<JSONObject> jsonArrayResponse = new JSONArray();
+		for (int i = 1; i < chosenPointsID.size(); i++) {
 
-		List<JSONObject> responseRoad = new JSONArray();
+			int sourceId = chosenPointsID.get(i - 1);
+			int endId = chosenPointsID.get(i);
 
-		if (sourcePointOptional.isPresent()) {
-
-			Node endNode = getNodeByGivenPointId(nodes, endId);
-
-			
-
-			List<Node> shortestPath = endNode.getShortestPath();
-			shortestPath.add(endNode);
-			logger.info("sciezka: "+shortestPath);
-
-			int startIndex = 0;
-			for (int i = 0; i < shortestPath.size(); i++) {
-				if (shortestPath.get(i).getPoint().getId() == startId) {
-					startIndex = i;
-					break;
-				}
-			}
-
-			for (int i = startIndex + 1; i < shortestPath.size(); i++) {
-				
-				Node actualNode = getNodeByGivenPointId(nodes, shortestPath.get(i).getPoint().getId());  // koniec pary 
-				Node beforeNode = getNodeByGivenPointId(nodes, shortestPath.get(i - 1).getPoint().getId());  // poczatek pary 
-				
-				
-				Map<Node, Segment> adjacencyNodeForJSON = graph.getAdjacencyList().get(beforeNode);
-				Segment segmentBetweenBeforeAndActual = adjacencyNodeForJSON.get(actualNode); // krawedz laczaca pcozatek - koniec ( PARY NIE CALEJ SCIEZKI)
-				
-				logger.info("before " + beforeNode);
-				logger.info("actual " + actualNode);
-				
-				logger.info("segment " + segmentBetweenBeforeAndActual);
-				
-				
-//				JSONObject jsonResponse = new JSONObject();
-//				adjacencyNodeForJSON = graph.getAdjacencyList().get(shortestPath.get(i));
-//				logger.info("przed");
-//				logger.info(" im here "+ adjacencyNodeForJSON);
-//				logger.info("po");
-				
-				//Point startPoint = pointDAO
-				//		.findPointByGivenId(adjacencyNodeForJSON.get().get();
-			}
-
-//			int j = 0;
-//			for (int i = startIndex; i < shortestPath.size(); i++) {
-//
-//				JSONObject jsonResponse = new JSONObject();
-//				j = i;
-//				// logger.info("Dla którego node'a szukamy : " + shortestPath.get(i - 1));
-//				adjacencyNodeForJSON = graph.getAdjacencyList().get(shortestPath.get(i));
-//
-//				Point startPoint = pointDAO
-//						.findPointByGivenId(adjacencyNodeForJSON.get(shortestPath.get(j)).getStartPointID()).get();
-//				Point endPoint = pointDAO
-//						.findPointByGivenId(adjacencyNodeForJSON.get(shortestPath.get(j)).getEndPointID()).get();
-//
-//				if (segmentDAO.checkSegmentOrder(shortestPath.get(i).getPoint(),
-//						adjacencyNodeForJSON.get(shortestPath.get(j))) == true) {
-//
-//					jsonResponse.put("start_point", startPoint);
-//					jsonResponse.put("end_point", endPoint);
-//					jsonResponse.put("segment_id", adjacencyNodeForJSON.get(shortestPath.get(j)).getId());
-//					jsonResponse.put("length", adjacencyNodeForJSON.get(shortestPath.get(j)).getLength());
-//					jsonResponse.put("points", segmentDAO
-//							.findAllPointsForSegmentByID(adjacencyNodeForJSON.get(shortestPath.get(j)).getId()));
-//					responseRoad.add(jsonResponse);
-//				} else {
-//					jsonResponse.put("start_point", endPoint);
-//					jsonResponse.put("end_point", startPoint);
-//					jsonResponse.put("segment_id", adjacencyNodeForJSON.get(shortestPath.get(j)).getId());
-//					jsonResponse.put("length", adjacencyNodeForJSON.get(shortestPath.get(j)).getLength());
-//					List<Point> points = segmentDAO
-//							.findAllPointsForSegmentByID(adjacencyNodeForJSON.get(shortestPath.get(j)).getId());
-//					Collections.reverse(points);
-//					jsonResponse.put("points", points);
-//					responseRoad.add(jsonResponse);
-//				}
-//				j = 0;
-//			}
+			List<JSONObject> shortestPathFromStartNodeToEndNode = getShortestPathFromStartNodeToEndNodeBELLMAN(sourceId,
+					endId);
+			jsonArrayResponse.addAll(shortestPathFromStartNodeToEndNode);
 		}
-		return responseRoad;
+		return jsonArrayResponse;
+	}
+	
+	
+
+	private int getIndexWhenToStart(List<Node> pathWithEndNode, int startId) {
+		int startIndex = 0;
+		for (int i = 0; i < pathWithEndNode.size(); i++) {
+			if (pathWithEndNode.get(i).getPoint().getId() != startId) {
+				startIndex = -1;
+			} else {
+				startIndex = i;
+				break;
+			}
+		}
+		return startIndex;
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<JSONObject> getShortestPathFromStartNodeToEndNodeOLD(int startId, int endId) throws Exception {
+	public List<JSONObject> getShortestPathFromStartNodeToEndNode(int startId, int endId) throws Exception {
 		List<JSONObject> responseRoad = new JSONArray();
 
 		List<Node> nodes = findAllNodes();
 		Map<Node, Map<Node, Segment>> adjacencyMap = createAdjacencyMap(nodes);
-
-		Graph graphOLD = new Graph(nodes, adjacencyMap);
+		Graph graph = new Graph(nodes, adjacencyMap);
+		calculateShortestPathFromSource(graph, getNodeByGivenPointId(nodes, startId));
 
 		Optional<Point> sourcePointOptional = pointDAO.findPointByGivenId(startId);
+		Optional<Point> endPointOptional = pointDAO.findPointByGivenId(endId);
 
-		if (sourcePointOptional.isPresent()) {
-			Point sourcePoint = pointDAO.findPointByGivenId(startId).get();
-
-			Node sourceNode = new Node(sourcePoint);
+		if (sourcePointOptional.isPresent() && endPointOptional.isPresent()) {
 			Node endNode = getNodeByGivenPointId(nodes, endId);
 
-			Map<Node, Segment> adjacencyNodeForJSON = new HashMap<>();
-
-			calculateShortestPathFromSource(graphOLD, sourceNode);
-
 			List<Node> shortestPath = endNode.getShortestPath();
-			shortestPath.add(endNode);
+			List<Node> pathWithEndNode = new ArrayList<>(shortestPath);
+			pathWithEndNode.add(endNode);
 
-			int j = 0;
-			for (int i = 1; i < shortestPath.size(); i++) {
+			logger.info("sciezka: " + pathWithEndNode);
 
-				JSONObject jsonResponse = new JSONObject();
-				j = i;
-				logger.info("Dla którego node'a szukamy : " + shortestPath.get(i - 1));
-				adjacencyNodeForJSON = adjacencyMap.get(shortestPath.get(i - 1));
+			int startIndex = getIndexWhenToStart(pathWithEndNode, startId);
+			if (startIndex != -1) {
+				for (int i = startIndex + 1; i < pathWithEndNode.size(); i++) {
 
-				Point startPoint = pointDAO
-						.findPointByGivenId(adjacencyNodeForJSON.get(shortestPath.get(j)).getStartPointID()).get();
-				Point endPoint = pointDAO
-						.findPointByGivenId(adjacencyNodeForJSON.get(shortestPath.get(j)).getEndPointID()).get();
+					JSONObject jsonResponse = new JSONObject();
+					Node actualNode = getNodeByGivenPointId(nodes, pathWithEndNode.get(i).getPoint().getId()); // koniec
+					Node beforeNode = getNodeByGivenPointId(nodes, pathWithEndNode.get(i - 1).getPoint().getId()); // poczatek
 
-				if (segmentDAO.checkSegmentOrder(shortestPath.get(i - 1).getPoint(),
-						adjacencyNodeForJSON.get(shortestPath.get(j))) == true) {
+					Map<Node, Segment> adjacencyNodeForJSON = graph.getAdjacencyList().get(beforeNode);
+					Segment segmentBetweenBeforeAndActual = adjacencyNodeForJSON.get(actualNode);
 
-					jsonResponse.put("start_point", startPoint);
-					jsonResponse.put("end_point", endPoint);
-					jsonResponse.put("segment_id", adjacencyNodeForJSON.get(shortestPath.get(j)).getId());
-					jsonResponse.put("length", adjacencyNodeForJSON.get(shortestPath.get(j)).getLength());
-					jsonResponse.put("points", segmentDAO
-							.findAllPointsForSegmentByID(adjacencyNodeForJSON.get(shortestPath.get(j)).getId()));
-					responseRoad.add(jsonResponse);
+					logger.info("before " + beforeNode);
+					logger.info("actual " + actualNode);
+					logger.info("segment " + segmentBetweenBeforeAndActual);
 
-				} else {
-					jsonResponse.put("start_point", endPoint);
-					jsonResponse.put("end_point", startPoint);
-					jsonResponse.put("segment_id", adjacencyNodeForJSON.get(shortestPath.get(j)).getId());
-					jsonResponse.put("length", adjacencyNodeForJSON.get(shortestPath.get(j)).getLength());
-					List<Point> points = segmentDAO
-							.findAllPointsForSegmentByID(adjacencyNodeForJSON.get(shortestPath.get(j)).getId());
-					Collections.reverse(points);
-					jsonResponse.put("points", points);
-					responseRoad.add(jsonResponse);
+					if (!segmentDAO.checkSegmentOrder(beforeNode.getPoint(), segmentBetweenBeforeAndActual)) {
+						jsonResponse.put("start_point", beforeNode.getPoint());
+						jsonResponse.put("end_point", actualNode.getPoint());
+						jsonResponse.put("segment_id", segmentBetweenBeforeAndActual.getId());
+						jsonResponse.put("length", segmentBetweenBeforeAndActual.getLength());
+						List<Point> points = segmentDAO
+								.findAllPointsForSegmentByID(segmentBetweenBeforeAndActual.getId());
+						Collections.reverse(points);
+						jsonResponse.put("points", points);
+						responseRoad.add(jsonResponse);
+					} else {
+
+						jsonResponse.put("start_point", beforeNode.getPoint());
+						jsonResponse.put("end_point", actualNode.getPoint());
+						jsonResponse.put("segment_id", segmentBetweenBeforeAndActual.getId());
+						jsonResponse.put("length", segmentBetweenBeforeAndActual.getLength());
+						jsonResponse.put("points",
+								segmentDAO.findAllPointsForSegmentByID(segmentBetweenBeforeAndActual.getId()));
+						responseRoad.add(jsonResponse);
+					}
 				}
-				j = 0;
 			}
 		}
 		return responseRoad;
 	}
-
 }

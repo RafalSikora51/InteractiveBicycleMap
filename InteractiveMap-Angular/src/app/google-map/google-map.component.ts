@@ -10,6 +10,7 @@ import { SegmentPointSet } from '../Model/SegmentPointSet';
 import { GoogleMapService } from './google-map.service';
 import { Point } from '../Model/point';
 import { empty } from 'rxjs/Observer';
+import { HttpResponse } from 'selenium-webdriver/http';
 @Component({
   selector: 'app-google-map',
   templateUrl: './google-map.component.html',
@@ -160,67 +161,48 @@ export class GoogleMapComponent implements OnInit {
   }
 
 
-  getShortestPath(): boolean {
+  getShortestPath(finalRoad: any): boolean {
 
     let points = [];
 
     let start_point;
     let end_point;
 
+    finalRoad.forEach(element => {
+
+      start_point = element['start_point'];
+      end_point = element['end_point'];
+      const start_markerTemp: Marker = { lat: 0, lng: 0 };
+      const end_markerTemp: Marker = { lat: 0, lng: 0 };
+      start_markerTemp.lat = start_point.lat;
+      start_markerTemp.lng = start_point.lng;
+      end_markerTemp.lat = end_point.lat;
+      end_markerTemp.lng = end_point.lng;
+      points = element['points'];
+      this.dijkstraArray.push(start_markerTemp);
+
+      points.forEach(point => {
+        const markerTemp: Marker = { lat: 0, lng: 0 };
+        markerTemp.lat = point.lat;
+        markerTemp.lng = point.lng;
+        this.dijkstraArray.push(markerTemp);
+      });
+
+      this.dijkstraArray.push(end_markerTemp);
+
+    });
 
 
-    this.segmentService.shortestDijkstraPath(1, 42).subscribe(
-      segments => {
+    const Path2 = new google.maps.Polyline({
+      path: this.dijkstraArray,
+      geodesic: true,
+      editable: false,
+      strokeColor: '#043596',
+      strokeOpacity: 1,
+      strokeWeight: 7,
+    });
+    Path2.setMap(this.googleMap);
 
-        this.dijkstraSet = segments;
-        // console.log('im here');
-        // console.table(this.dijkstraSet);
-
-
-
-
-        this.dijkstraSet.forEach(element => {
-
-          start_point = element['start_point'];
-          end_point = element['end_point'];
-          const start_markerTemp: Marker = { lat: 0, lng: 0 };
-          const end_markerTemp: Marker = { lat: 0, lng: 0 };
-          start_markerTemp.lat = start_point.lat;
-          start_markerTemp.lng = start_point.lng;
-          end_markerTemp.lat = end_point.lat;
-          end_markerTemp.lng = end_point.lng;
-          points = element['points'];
-          this.dijkstraArray.push(start_markerTemp);
-
-          points.forEach(point => {
-            const markerTemp: Marker = { lat: 0, lng: 0 };
-            markerTemp.lat = point.lat;
-            markerTemp.lng = point.lng;
-            this.dijkstraArray.push(markerTemp);
-          });
-
-          this.dijkstraArray.push(end_markerTemp);
-
-        });
-
-
-        const Path2 = new google.maps.Polyline({
-          path: this.dijkstraArray,
-          geodesic: true,
-          editable: false,
-          strokeColor: '#043596',
-          strokeOpacity: 1,
-          strokeWeight: 7,
-        });
-        Path2.setMap(this.googleMap);
-
-
-
-      },
-      error => {
-        console.log(error);
-      }
-    );
     // this.dijkstraArray = [];
     return true;
   }
@@ -384,8 +366,17 @@ export class GoogleMapComponent implements OnInit {
   }
 
   doDijkstraOnList() {
-    console.log('klikniete punkty to: ');
     this.showArrayMarkers();
+
+    console.log(this.pressedNodes);
+
+    this.segmentService.dijkstraOnList(this.pressedNodes)
+      .subscribe(markers => {
+        this.markers = markers;
+        console.table(this.markers);
+        this.getShortestPath(this.markers);
+      });
+
 
     console.log('tutaj wywolujemy request z naszymi klikenitymi id');
     console.log('teraz czyscimy tablice aby nie bylo juz zapamietanych kliknietych ' +
