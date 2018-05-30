@@ -80,29 +80,29 @@ public class GraphController {
 	
 
 
-	@RequestMapping(value = "/dijkstra/{startId}/{endId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ResponseBody
-	public ResponseEntity<List<JSONObject>> getShortestPathFromStartNodeToEndNode(@PathVariable int startId,
-			@PathVariable int endId) throws Exception {
-		List<JSONObject> shortestPath = graphDao.getShortestPathFromStartNodeToEndNode(startId, endId);
-		if (shortestPath.isEmpty()) {
-			return new ResponseEntity<List<JSONObject>>(HttpStatus.NO_CONTENT);
-		} else {
-			return new ResponseEntity<List<JSONObject>>(shortestPath, HttpStatus.OK);
-		}
-	}
+//	@RequestMapping(value = "/dijkstra/{startId}/{endId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+//	@ResponseBody
+//	public ResponseEntity<List<JSONObject>> getShortestPathFromStartNodeToEndNode(@PathVariable int startId,
+//			@PathVariable int endId) throws Exception {
+//		List<JSONObject> shortestPath = graphDao.getShortestPathFromStartNodeToEndNode(startId, endId);
+//		if (shortestPath.isEmpty()) {
+//			return new ResponseEntity<List<JSONObject>>(HttpStatus.NO_CONTENT);
+//		} else {
+//			return new ResponseEntity<List<JSONObject>>(shortestPath, HttpStatus.OK);
+//		}
+//	}
 	
-	@RequestMapping(value = "/bellman/{startId}/{endId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ResponseBody
-	public ResponseEntity<List<JSONObject>> getShortestPathFromStartNodeToEndNodeBELLMAN(@PathVariable int startId,
-			@PathVariable int endId) throws Exception {
-		List<JSONObject> shortestPath = graphDao.getShortestPathFromStartNodeToEndNodeBELLMAN(startId, endId);
-		if (shortestPath.isEmpty()) {
-			return new ResponseEntity<List<JSONObject>>(HttpStatus.NO_CONTENT);
-		} else {
-			return new ResponseEntity<List<JSONObject>>(shortestPath, HttpStatus.OK);
-		}
-	}
+//	@RequestMapping(value = "/bellman/{startId}/{endId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+//	@ResponseBody
+//	public ResponseEntity<List<JSONObject>> getShortestPathFromStartNodeToEndNodeBELLMAN(@PathVariable int startId,
+//			@PathVariable int endId) throws Exception {
+//		List<JSONObject> shortestPath = graphDao.getShortestPathFromStartNodeToEndNodeBELLMAN(startId, endId);
+//		if (shortestPath.isEmpty()) {
+//			return new ResponseEntity<List<JSONObject>>(HttpStatus.NO_CONTENT);
+//		} else {
+//			return new ResponseEntity<List<JSONObject>>(shortestPath, HttpStatus.OK);
+//		}
+//	}
 	
 
 }

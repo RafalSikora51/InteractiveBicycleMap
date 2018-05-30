@@ -181,18 +181,18 @@ public class GraphDAO {
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<JSONObject> getShortestPathFromStartNodeToEndNodeBELLMAN(int startId, int endId) throws Exception {
+	public List<JSONObject> getShortestPathFromStartNodeToEndNodeBELLMAN(Graph graph, int startId, int endId) throws Exception {
 		List<JSONObject> responseRoad = new JSONArray();
 
-		List<Node> nodes = findAllNodes();
-		Map<Node, Map<Node, Segment>> adjacencyMap = createAdjacencyMap(nodes);
-		Graph graph = new Graph(nodes, adjacencyMap);
+		List<Node> nodes = graph.getNodes();
 		
 		calculateShortestPathFromSourceBellmanFord(graph, getNodeByGivenPointId(nodes, startId));
 
 		Optional<Point> sourcePointOptional = pointDAO.findPointByGivenId(startId);
 		Optional<Point> endPointOptional = pointDAO.findPointByGivenId(endId);
 
+		
+		
 		if (sourcePointOptional.isPresent() && endPointOptional.isPresent()) {
 			Node endNode = getNodeByGivenPointId(nodes, endId);
 
@@ -305,12 +305,15 @@ public class GraphDAO {
 	public List<JSONObject> getShortestPathFromList(List<Integer> chosenPointsID) throws Exception {
 
 		List<JSONObject> jsonArrayResponse = new JSONArray();
+		List<Node> nodes = findAllNodes();
+		Map<Node, Map<Node, Segment>> adjacencyMap = createAdjacencyMap(nodes);
+		Graph graph = new Graph(nodes, adjacencyMap);
 		for (int i = 1; i < chosenPointsID.size(); i++) {
 
 			int sourceId = chosenPointsID.get(i - 1);
 			int endId = chosenPointsID.get(i);
 
-			List<JSONObject> shortestPathFromStartNodeToEndNode = getShortestPathFromStartNodeToEndNode(sourceId,
+			List<JSONObject> shortestPathFromStartNodeToEndNode = getShortestPathFromStartNodeToEndNode(graph,sourceId,
 					endId);
 			jsonArrayResponse.addAll(shortestPathFromStartNodeToEndNode);
 		}
@@ -321,12 +324,17 @@ public class GraphDAO {
 	public List<JSONObject> getShortestPathFromListBELLMAN(List<Integer> chosenPointsID) throws Exception {
 
 		List<JSONObject> jsonArrayResponse = new JSONArray();
+		
+		List<Node> nodes = findAllNodes();
+		Map<Node, Map<Node, Segment>> adjacencyMap = createAdjacencyMap(nodes);
+		Graph graph = new Graph(nodes, adjacencyMap);
+		
 		for (int i = 1; i < chosenPointsID.size(); i++) {
 
 			int sourceId = chosenPointsID.get(i - 1);
 			int endId = chosenPointsID.get(i);
 
-			List<JSONObject> shortestPathFromStartNodeToEndNode = getShortestPathFromStartNodeToEndNodeBELLMAN(sourceId,
+			List<JSONObject> shortestPathFromStartNodeToEndNode = getShortestPathFromStartNodeToEndNodeBELLMAN(graph, sourceId,
 					endId);
 			jsonArrayResponse.addAll(shortestPathFromStartNodeToEndNode);
 		}
@@ -349,12 +357,11 @@ public class GraphDAO {
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<JSONObject> getShortestPathFromStartNodeToEndNode(int startId, int endId) throws Exception {
+	public List<JSONObject> getShortestPathFromStartNodeToEndNode(Graph graph, int startId, int endId) throws Exception {
 		List<JSONObject> responseRoad = new JSONArray();
 
-		List<Node> nodes = findAllNodes();
-		Map<Node, Map<Node, Segment>> adjacencyMap = createAdjacencyMap(nodes);
-		Graph graph = new Graph(nodes, adjacencyMap);
+		List<Node> nodes = graph.getNodes();
+		
 		calculateShortestPathFromSource(graph, getNodeByGivenPointId(nodes, startId));
 
 		Optional<Point> sourcePointOptional = pointDAO.findPointByGivenId(startId);
