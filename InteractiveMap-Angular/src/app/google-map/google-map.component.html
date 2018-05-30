@@ -28,21 +28,16 @@
           <mat-divider></mat-divider>
           <mat-divider></mat-divider>
           <mat-divider></mat-divider>
-          <a mat-list-item (click)="addAllMarkersFromAPI()">Dodaj ścieżki do mapy</a>
+          <a mat-list-item (click)="addAllMarkersFromAPI()">Wyświetl ścieżki</a>
           <!-- <a mat-list-item (click)="getNodes()">Dodaj ścieżki do mapy</a> -->
           <mat-divider></mat-divider>
-          <a mat-list-item (click)=" addBicycleLayer()">Wyświetl ścieżki</a>
-          <mat-divider></mat-divider>
-          <a mat-list-item (click)="drawPath()">Utwórz ścieżkę</a>
+          <a mat-list-item (click)=" addBicycleLayer()">Wyświetl ścieżki Google</a>
           <mat-divider></mat-divider>
           <a mat-list-item (click)="removeBicycleLayer()">Usuń ścieżki z mapy</a>
           <mat-divider></mat-divider>
-          <a mat-list-item (click)="getShortestPath()">Dijkstra</a>
-          <!-- <a mat-list-item (click)="getShortestPath2()">Dijkstra</a> -->
+          <a mat-list-item (click)="doDijkstraOnList()">Wyznacz ścieżkę - Dijkstra</a>
           <mat-divider></mat-divider>
-          <a mat-list-item (click)="showArrayMarkers()">Wyświetl dodane koordynaty</a>
-          <mat-divider></mat-divider>
-          <a mat-list-item (click)="doDijkstraOnList()">Dijkstra dla kliknietych</a>
+          <a mat-list-item (click)="doBellmanOnList()">Wyznacz ścieżkę - Bellman-Ford</a>
 
         </mat-nav-list>
 

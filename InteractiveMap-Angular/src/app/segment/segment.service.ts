@@ -11,11 +11,12 @@ import { SegmentPointSet } from '../Model/SegmentPointSet';
 @Injectable()
 export class SegmentService {
 
-  private SEGMENTS_API_URL = 'http://localhost:9090/segments';
-  private SEGMENTSALL_API_URL = 'http://localhost:9090/segments/all';
-  private DIJKSTRA = 'http://localhost:9090/graph/dijkstra/';
-  private NODES_API_URL = 'http://localhost:9090/graph/nodes';
-  private DIJKSTRALIST_API_URL = 'http://localhost:9090/graph/dijkstra';
+  private SEGMENTS_API_URL = 'http://10.18.3.164:9090/segments';
+  private SEGMENTSALL_API_URL = 'http://10.18.3.164:9090/segments/all';
+  private DIJKSTRA = 'http://10.18.3.164:9090/graph/dijkstra/';
+  private NODES_API_URL = 'http://10.18.3.164:9090/graph/nodes';
+  private DIJKSTRALIST_API_URL = 'http://10.18.3.164:9090/graph/dijkstra';
+  private BELLMAN_API_URL = 'http://10.18.3.164:9090/graph/bellman';
 
 
   constructor(private http: HttpClient) { }
@@ -23,7 +24,7 @@ export class SegmentService {
   private handleError<T>(operation = 'operation', result?: T) {
     return (error: any): Observable<T> => {
       console.error(error);
-      this.log(`${operation} failed: ${error.message}`);
+      this.log(`${operation} failed: ${error}`);
       return of(result as T);
     };
   }
@@ -80,9 +81,19 @@ export class SegmentService {
   public dijkstraOnList(markers: any[]): Observable<any> {
 
     return this.http.post(this.DIJKSTRALIST_API_URL, markers)
-    .pipe(
-      catchError(this.handleError('addHero', markers))
-    );
+      .pipe(
+        catchError(this.handleError('addHero', markers))
+      );
+
+  }
+
+
+  public BellmanOnList(markers: any[]): Observable<any> {
+
+    return this.http.post(this.BELLMAN_API_URL, markers)
+      .pipe(
+        catchError(this.handleError('addHero', markers))
+      );
 
   }
 

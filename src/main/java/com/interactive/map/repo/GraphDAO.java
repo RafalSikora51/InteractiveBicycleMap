@@ -130,7 +130,6 @@ public class GraphDAO {
 			if (nodeDistance < lowestDistance) {
 				lowestDistance = nodeDistance;
 				lowestDistanceNode = node;
-				break;
 			}
 		}
 		return lowestDistanceNode;
@@ -178,10 +177,6 @@ public class GraphDAO {
 				}
 			}
 		}
-
-		logger.info("dla id=1: " + getNodeByGivenPointId(graph.getNodes(), 1).getShortestPath());
-		logger.info("dla id=34: " + getNodeByGivenPointId(graph.getNodes(), 34).getShortestPath());
-
 		return graph;
 	}
 
@@ -192,6 +187,7 @@ public class GraphDAO {
 		List<Node> nodes = findAllNodes();
 		Map<Node, Map<Node, Segment>> adjacencyMap = createAdjacencyMap(nodes);
 		Graph graph = new Graph(nodes, adjacencyMap);
+		
 		calculateShortestPathFromSourceBellmanFord(graph, getNodeByGivenPointId(nodes, startId));
 
 		Optional<Point> sourcePointOptional = pointDAO.findPointByGivenId(startId);

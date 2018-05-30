@@ -132,7 +132,7 @@ export class GoogleMapComponent implements OnInit {
               '</head>' +
               '<body>' +
               '<div class="gm-style-iw">' +
-              '<p>' + 'ID: ' + point.id + ' LatLng: ' + point.lat + '    ' + point.lng + '</p>' +
+              '<p>' + 'ID: ' + point.id + ' LatLng: ' + point.lat + ', ' + point.lng + '</p>' +
               '</div>' +
               '</body>' +
               '</html>',
@@ -203,7 +203,7 @@ export class GoogleMapComponent implements OnInit {
     });
     Path2.setMap(this.googleMap);
 
-    // this.dijkstraArray = [];
+     this.dijkstraArray = [];
     return true;
   }
 
@@ -381,12 +381,38 @@ export class GoogleMapComponent implements OnInit {
     console.log('tutaj wywolujemy request z naszymi klikenitymi id');
     console.log('teraz czyscimy tablice aby nie bylo juz zapamietanych kliknietych ' +
       'skoro dijkstra ywkonana (robimy miejsce na nowe)');
-
+      this.markers = [];
     this.pressedNodes = [];
     console.log('klikniete punkty to: ');
     this.showArrayMarkers();
 
   }
+
+  doBellmanOnList() {
+    this.showArrayMarkers();
+
+    console.log(this.pressedNodes);
+
+    this.segmentService.BellmanOnList(this.pressedNodes)
+      .subscribe(markers => {
+        this.markers = markers;
+        console.table(this.markers);
+        this.getShortestPath(this.markers);
+      });
+
+
+    console.log('tutaj wywolujemy request z naszymi klikenitymi id');
+    console.log('teraz czyscimy tablice aby nie bylo juz zapamietanych kliknietych ' +
+      'skoro dijkstra ywkonana (robimy miejsce na nowe)');
+    this.markers = [];
+    this.pressedNodes = [];
+    console.log('klikniete punkty to: ');
+    this.showArrayMarkers();
+
+  }
+
+
+
 
 
 }
