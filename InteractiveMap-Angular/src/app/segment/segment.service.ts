@@ -11,12 +11,12 @@ import { SegmentPointSet } from '../Model/SegmentPointSet';
 @Injectable()
 export class SegmentService {
 
-  private SEGMENTS_API_URL = 'http://10.18.3.164:9090/segments';
-  private SEGMENTSALL_API_URL = 'http://10.18.3.164:9090/segments/all';
-  private DIJKSTRA = 'http://10.18.3.164:9090/graph/dijkstra/';
-  private NODES_API_URL = 'http://10.18.3.164:9090/graph/nodes';
-  private DIJKSTRALIST_API_URL = 'http://10.18.3.164:9090/graph/dijkstra';
-  private BELLMAN_API_URL = 'http://10.18.3.164:9090/graph/bellman';
+  private SEGMENTS_API_URL = 'http://localhost:9090/segments';
+  private SEGMENTSALL_API_URL = 'http://localhost:9090/segments/all';
+  private DIJKSTRA = 'http://localhost:9090/graph/dijkstra/';
+  private NODES_API_URL = 'http://localhost:9090/graph/nodes';
+  private DIJKSTRALIST_API_URL = 'http://localhost:9090/graph/dijkstra';
+  private BELLMAN_API_URL = 'http://localhost:9090/graph/bellman';
 
 
   constructor(private http: HttpClient) { }

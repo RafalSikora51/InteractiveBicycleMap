@@ -25,10 +25,10 @@ export class GoogleMapComponent implements OnInit {
   segmentPointsSet: SegmentPointSet[];
   dijkstraSet: SegmentPointSet[] = [];
   dijkstraArray: any[] = [0, 0];
-  markersListenerArray: any[] = [0];
   nodesArray: any[];
-
+  polyLines: any[] = [];
   pressedNodes: any[] = [];
+  markersToRemove: any[] = [0, 0];
 
   constructor(private segmentService: SegmentService,
     private segmentComponent: SegmentComponent,
@@ -61,15 +61,14 @@ export class GoogleMapComponent implements OnInit {
     };
 
     this.googleMap = new google.maps.Map(mapCanvas, mapOptions);
-    google.maps.event.addListener(this.googleMap, 'click', (event) => {
-      this.placeMarker(event);
-    });
+
 
     this.markersArray.pop();
     this.markersArray.pop();
     this.dijkstraArray.pop();
     this.dijkstraArray.pop();
-
+    this.markersToRemove.pop();
+    this.markersToRemove.pop();
     this.pressedNodes.push();
 
   }
@@ -78,7 +77,6 @@ export class GoogleMapComponent implements OnInit {
     this.segmentService.getAllSegmentsWithPoints().subscribe(
       segments => {
         this.segmentPointsSet = segments;
-        // console.table(this.segmentPointsSet);
       },
       error => {
         console.log(error);
@@ -92,6 +90,7 @@ export class GoogleMapComponent implements OnInit {
     this.segmentService.getAllNodes().subscribe(
       nodes => {
         this.nodesArray = nodes;
+        console.log('Jestem w getNodes');
         console.table(nodes);
 
         this.nodesArray.forEach(node => {
@@ -145,8 +144,8 @@ export class GoogleMapComponent implements OnInit {
             info2.open(this.googleMap, marker);
             marker.setIcon('/assets/pin.png');
             that.pressedNodes.push(point.id);
+            this.markersToRemove.push(marker);
           });
-          this.markersListenerArray.push(marker);
 
 
 
@@ -192,7 +191,6 @@ export class GoogleMapComponent implements OnInit {
 
     });
 
-
     const Path2 = new google.maps.Polyline({
       path: this.dijkstraArray,
       geodesic: true,
@@ -202,11 +200,10 @@ export class GoogleMapComponent implements OnInit {
       strokeWeight: 7,
     });
     Path2.setMap(this.googleMap);
-
-     this.dijkstraArray = [];
+    this.polyLines.push(Path2);
+    this.dijkstraArray = [];
     return true;
   }
-
 
   placeMarker(event) {
 
@@ -262,7 +259,7 @@ export class GoogleMapComponent implements OnInit {
   }
 
   drawPath() {
-    //console.log(this.markersArray);
+    // console.log(this.markersArray);
     const Path = new google.maps.Polyline({
       path: this.markersArray,
       geodesic: true,
@@ -281,7 +278,9 @@ export class GoogleMapComponent implements OnInit {
     let end_point;
 
     this.segmentPointsSet.forEach(element => {
+      // tslint:disable-next-line:prefer-const
       let markerStart;
+      // tslint:disable-next-line:prefer-const
       let markerEnd;
       start_point = element['start_point'];
       end_point = element['end_point'];
@@ -311,29 +310,11 @@ export class GoogleMapComponent implements OnInit {
       this.markersArray.push(end_markerTemp);
       this.drawPath();
       this.markersArray = [];
-
-
-
-
     });
 
     this.getNodes();
 
   }
-
-
-
-
-
-
-  // showArrayMarkers() {
-  //   if (this.showArray === false) {
-  //     this.showArray = true;
-  //   }
-  //   if (this.showArray === true) {
-  //     console.log(this.markersArray);
-  //   }
-  // }
 
 
   addBicycleLayer() {
@@ -381,7 +362,7 @@ export class GoogleMapComponent implements OnInit {
     console.log('tutaj wywolujemy request z naszymi klikenitymi id');
     console.log('teraz czyscimy tablice aby nie bylo juz zapamietanych kliknietych ' +
       'skoro dijkstra ywkonana (robimy miejsce na nowe)');
-      this.markers = [];
+    this.markers = [];
     this.pressedNodes = [];
     console.log('klikniete punkty to: ');
     this.showArrayMarkers();
@@ -398,6 +379,7 @@ export class GoogleMapComponent implements OnInit {
         this.markers = markers;
         console.table(this.markers);
         this.getShortestPath(this.markers);
+
       });
 
 
@@ -408,8 +390,32 @@ export class GoogleMapComponent implements OnInit {
     this.pressedNodes = [];
     console.log('klikniete punkty to: ');
     this.showArrayMarkers();
+    this.clearPolylines();
 
   }
+
+  clearPolylines() {
+    this.removePolylines();
+    this.removeMarkers();
+  }
+
+
+  removePolylines() {
+    for (let i = 0; i < this.polyLines.length; i++) {
+      this.polyLines[i].setMap(null);
+    }
+  }
+
+  removeMarkers() {
+
+    for (let i = 0; i < this.markersToRemove.length; i++) {
+
+      this.markersToRemove[i].setMap(null);
+
+    }
+
+  }
+
 
 
 
