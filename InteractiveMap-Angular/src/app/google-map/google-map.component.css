@@ -13,7 +13,7 @@ mat-toolbar-row {
 
 mat-sidenav {
   padding: 10px;
-  min-width: 400px;
+  min-width: 300px;
 }
 
 .gm-style .gm-style-iw {
@@ -25,4 +25,18 @@ mat-sidenav {
   min-height: 120px !important;
   padding-top: 10px;
   display: block !important;
-}    
+}
+.mat-icon {
+  transform: scale(1.5);
+}
+.example-card {
+  max-width: auto;
+  overflow-x:hidden;
+}
+
+.mat-tab-body-wrapper{
+  overflow: hidden;
+}
+mat-sidenav {
+  width: 200px;
+}

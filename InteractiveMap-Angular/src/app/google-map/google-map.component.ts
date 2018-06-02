@@ -9,8 +9,13 @@ import { SegmentComponent } from '../segment/segment.component';
 import { SegmentPointSet } from '../Model/SegmentPointSet';
 import { GoogleMapService } from './google-map.service';
 import { Point } from '../Model/point';
-import { empty } from 'rxjs/Observer';
+import { Observable, of } from 'rxjs';
 import { HttpResponse } from 'selenium-webdriver/http';
+import { MatDialogModule } from '@angular/material/dialog';
+
+import { DialogComponent } from '../dialog/dialog.component';
+
+
 @Component({
   selector: 'app-google-map',
   templateUrl: './google-map.component.html',
@@ -30,8 +35,14 @@ export class GoogleMapComponent implements OnInit {
   pressedNodes: any[] = [];
   markersToRemove: any[] = [0, 0];
 
+
+
+
+
+
   constructor(private segmentService: SegmentService,
     private segmentComponent: SegmentComponent,
+    private dialogComponent: DialogComponent
 
   ) {
     this.addBicycleLayerEnable = false;
@@ -91,7 +102,7 @@ export class GoogleMapComponent implements OnInit {
       nodes => {
         this.nodesArray = nodes;
         console.log('Jestem w getNodes');
-        console.table(nodes);
+        // console.table(nodes);
 
         this.nodesArray.forEach(node => {
 
@@ -110,45 +121,65 @@ export class GoogleMapComponent implements OnInit {
           });
 
 
+
+          // '<div id="content">'+
+          // '<p><b>Uluru</b></p>' +
+          // '</div>';
+          const contentInfo = '<p><app-dialog></app-dialog></p>';
+
           const info2 = new google.maps.InfoWindow({
-            content: '<html>' +
-              '<head>' +
-              '<style>' +
-              'p {' +
-              'color: blue;' +
-              'font-size:15px' +
-              '}' +
-              '.gm-style-iw {' +
-              'top: 0 !important;' +
-              'left: 10 !important;' +
-              'color:blue' +
-              'width:500px !important;' +
-              'height:50px !important;' +
-              'padding-left: 10px;' +
-              'margin:3px 6px 0px 0px;' +
-              '}' +
-              '</style>' +
-              '</head>' +
-              '<body>' +
-              '<div class="gm-style-iw">' +
-              '<p>' + 'ID: ' + point.id + ' LatLng: ' + point.lat + ', ' + point.lng + '</p>' +
-              '</div>' +
-              '</body>' +
-              '</html>',
+            content: contentInfo
 
           });
+
+
+
+          // const info2 = new google.maps.InfoWindow({
+          //   content: '<html>' +
+          //     '<head>' +
+          //     '<style>' +
+          //     'p {' +
+          //     'color: blue;' +
+          //     'font-size:15px' +
+          //     '}' +
+          //     '.gm-style-iw {' +
+          //     'top: 0 !important;' +
+          //     'left: 10 !important;' +
+          //     'color:blue' +
+          //     'width:500px !important;' +
+          //     'height:50px !important;' +
+          //     'padding-left: 10px;' +
+          //     'margin:3px 6px 0px 0px;' +
+          //     '}' +
+          //     '</style>' +
+          //     '</head>' +
+          //     '<body>' +
+          //     '<div class="gm-style-iw">' +
+          //     '<p>' + 'ID: ' + point.id + ' LatLng: ' + point.lat + ', ' + point.lng + '</p>' +
+          //     '</div>' +
+
+          //     '</body>' +
+          //     '</html>',
+
+          // });
+
+
+          // '<app-dialog></app-dialog>' +
+
 
           marker.addListener('click', function () {
             console.log('klikam na end ' + point.id);
 
-            info2.open(this.googleMap, marker);
+            // info2.open(this.googleMap, marker);
             marker.setIcon('/assets/pin.png');
             that.pressedNodes.push(point.id);
-            this.markersToRemove.push(marker);
+            that.markersToRemove.push(marker);
+
+            // that.DialogComponent.openDialog();
+
+            // that.dialogComponent.openDialog();
+
           });
-
-
-
         });
 
 
@@ -348,7 +379,7 @@ export class GoogleMapComponent implements OnInit {
 
   doDijkstraOnList() {
     this.showArrayMarkers();
-
+    this.dialogComponent.openDialog();
     console.log(this.pressedNodes);
 
     this.segmentService.dijkstraOnList(this.pressedNodes)
@@ -356,6 +387,7 @@ export class GoogleMapComponent implements OnInit {
         this.markers = markers;
         console.table(this.markers);
         this.getShortestPath(this.markers);
+        this.dialogComponent.closeDialog();
       });
 
 
@@ -371,7 +403,7 @@ export class GoogleMapComponent implements OnInit {
 
   doBellmanOnList() {
     this.showArrayMarkers();
-
+    this.dialogComponent.openDialog();
     console.log(this.pressedNodes);
 
     this.segmentService.BellmanOnList(this.pressedNodes)
@@ -379,7 +411,7 @@ export class GoogleMapComponent implements OnInit {
         this.markers = markers;
         console.table(this.markers);
         this.getShortestPath(this.markers);
-
+        this.dialogComponent.closeDialog();
       });
 
 
@@ -390,15 +422,7 @@ export class GoogleMapComponent implements OnInit {
     this.pressedNodes = [];
     console.log('klikniete punkty to: ');
     this.showArrayMarkers();
-    this.clearPolylines();
-
   }
-
-  clearPolylines() {
-    this.removePolylines();
-    this.removeMarkers();
-  }
-
 
   removePolylines() {
     for (let i = 0; i < this.polyLines.length; i++) {
@@ -407,16 +431,21 @@ export class GoogleMapComponent implements OnInit {
   }
 
   removeMarkers() {
-
     for (let i = 0; i < this.markersToRemove.length; i++) {
-
-      this.markersToRemove[i].setMap(null);
-
+      this.markersToRemove[i].setIcon();
+      // setMap(null);
     }
-
   }
 
+  mapReset(): void {
+    this.removePolylines();
+    this.removeMarkers();
 
+
+  }
+  dialogTest(): void {
+    this.dialogComponent.openDialog();
+  }
 
 
 

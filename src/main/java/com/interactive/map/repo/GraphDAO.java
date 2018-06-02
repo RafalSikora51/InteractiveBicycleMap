@@ -316,6 +316,11 @@ public class GraphDAO {
 			List<JSONObject> shortestPathFromStartNodeToEndNode = getShortestPathFromStartNodeToEndNode(graph,sourceId,
 					endId);
 			jsonArrayResponse.addAll(shortestPathFromStartNodeToEndNode);
+			
+			graph.getNodes().stream().forEach(node->{
+				node.getShortestPath().clear();
+				node.setDistance(Double.MAX_VALUE);
+			});
 		}
 		return jsonArrayResponse;
 	}
@@ -337,6 +342,10 @@ public class GraphDAO {
 			List<JSONObject> shortestPathFromStartNodeToEndNode = getShortestPathFromStartNodeToEndNodeBELLMAN(graph, sourceId,
 					endId);
 			jsonArrayResponse.addAll(shortestPathFromStartNodeToEndNode);
+			graph.getNodes().stream().forEach(node->{
+				node.getShortestPath().clear();
+				node.setDistance(Double.MAX_VALUE);
+			});
 		}
 		return jsonArrayResponse;
 	}
