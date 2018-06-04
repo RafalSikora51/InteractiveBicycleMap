@@ -9,7 +9,7 @@ import { FormsModule } from '@angular/forms';
 import { GoogleMapComponent } from './google-map/google-map.component';
 import { GoogleMapService } from './google-map/google-map.service';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import {DndModule} from 'ng2-dnd';
+import { DndModule } from 'ng2-dnd';
 import {
   MatAutocompleteModule,
   MatButtonModule,
@@ -50,6 +50,7 @@ import { PointService } from './point/point.service';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { DialogComponent } from './dialog/dialog.component';
 import { DialogOverviewExampleDialog } from './dialog/dialog.component';
+import { DragtestComponent } from './dragtest/dragtest.component';
 
 
 @NgModule({
@@ -59,7 +60,8 @@ import { DialogOverviewExampleDialog } from './dialog/dialog.component';
     DialogComponent,
     DialogOverviewExampleDialog,
     SegmentComponent,
-    PointComponent
+    PointComponent,
+    DragtestComponent
   ],
   imports: [
     HttpClientModule,
@@ -111,6 +113,9 @@ import { DialogOverviewExampleDialog } from './dialog/dialog.component';
     DndModule,
     DndModule.forRoot(),
     AlertModule.forRoot()
+  ],
+  exports: [
+    DndModule
   ],
   providers: [GoogleMapService, SegmentService, PointService, SegmentComponent, DialogComponent],
   bootstrap: [AppComponent],

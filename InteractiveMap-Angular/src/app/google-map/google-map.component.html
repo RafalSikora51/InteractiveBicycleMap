@@ -17,13 +17,41 @@
       <button mat-button (click)="sidenav.toggle()">Toggle</button>
     </p>
 
-    
+
   </mat-menu>
   <mat-sidenav-container class="example-container">
     <mat-sidenav #sidenav mode="over">
       <h3>Szczegóły dotyczące punktów:</h3>
       <mat-divider></mat-divider>
-    </mat-sidenav>  
+
+      <div class="row">
+        <div class="col-sm-3">
+          <div class="panel panel-success">
+            <div class="panel-heading">
+              Favorite drinks
+            </div>
+            <div class="panel-body">
+              <ul class="list-group" dnd-sortable-container [sortableData]="markersToRemove">
+                <mat-list *ngIf="markersToRemove">
+                  <mat-list-item *ngFor="let marker of markersToRemove; let i = index" class="list-group-item" dnd-sortable [sortableIndex]="i">{{marker}}</mat-list-item>
+                </mat-list>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="panel panel-default">
+            <div class="panel-body">
+              My prefences:
+              <br/>
+              <span *ngFor="let marker of markersToRemove; let i = index">{{i + 1}}) {{marker}}
+                <br/>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-sidenav>
     <mat-sidenav-content>
       <div>
         <mat-sidenav-container class="example-container">
@@ -36,7 +64,7 @@
               <mat-divider></mat-divider>
               <mat-divider></mat-divider>
               <mat-divider></mat-divider>
-              
+
               <a mat-list-item (click)="addAllMarkersFromAPI()">Wyświetl ścieżki</a>
               <!-- <a mat-list-item (click)="getNodes()">Dodaj ścieżki do mapy</a> -->
               <mat-divider></mat-divider>
@@ -49,6 +77,9 @@
               <a mat-list-item (click)="doBellmanOnList()">Wyznacz ścieżkę - Bellman-Ford</a>
               <mat-divider></mat-divider>
               <a mat-list-item (click)="mapReset()">Reset mapy</a>
+              <mat-divider></mat-divider>
+              <a mat-list-item (click)="showMarkersToRemove()">pokaz NodesToRemove</a>
+
             </mat-nav-list>
           </mat-sidenav>
           <mat-sidenav-content>

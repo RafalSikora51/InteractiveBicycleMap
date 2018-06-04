@@ -12,7 +12,6 @@ import { Point } from '../Model/point';
 import { Observable, of } from 'rxjs';
 import { HttpResponse } from 'selenium-webdriver/http';
 import { MatDialogModule } from '@angular/material/dialog';
-
 import { DialogComponent } from '../dialog/dialog.component';
 
 
@@ -34,12 +33,8 @@ export class GoogleMapComponent implements OnInit {
   polyLines: any[] = [];
   pressedNodes: any[] = [];
   markersToRemove: any[] = [0, 0];
-
-
-
-
-
-
+  listOne: Array<string> = ['Coffee', 'Orange Juice', 'Red Wine', 'Unhealty drink!', 'Water'];
+  locationString: String = ' ';
   constructor(private segmentService: SegmentService,
     private segmentComponent: SegmentComponent,
     private dialogComponent: DialogComponent
@@ -58,6 +53,8 @@ export class GoogleMapComponent implements OnInit {
   latitude: 53.131083;
   longitute: 23.154742;
   googleMap: google.maps.Map;
+  geocoder = new google.maps.Geocoder;
+
 
   ngOnInit() {
 
@@ -73,6 +70,10 @@ export class GoogleMapComponent implements OnInit {
 
     this.googleMap = new google.maps.Map(mapCanvas, mapOptions);
 
+    google.maps.event.addListener(this.googleMap, 'click', (event) => {
+      this.placeMarker(event);
+
+    });
 
     this.markersArray.pop();
     this.markersArray.pop();
@@ -169,12 +170,11 @@ export class GoogleMapComponent implements OnInit {
 
           marker.addListener('click', function () {
             console.log('klikam na end ' + point.id);
-
             // info2.open(this.googleMap, marker);
             marker.setIcon('/assets/pin.png');
             that.pressedNodes.push(point.id);
             that.markersToRemove.push(marker);
-
+            that.markersArray.push(point);
             // that.DialogComponent.openDialog();
 
             // that.dialogComponent.openDialog();
@@ -245,8 +245,24 @@ export class GoogleMapComponent implements OnInit {
     console.log('' + event.latLng.lat() + ', ' + event.latLng.lng());
 
     const tempInfo = '' + event.latLng.lat() + ', ' + event.latLng.lng();
+    const latlng = new google.maps.LatLng(event.latLng.lat(), event.latLng.lng());
+    this.geocoder = new google.maps.Geocoder();
+    console.log('TU SIĘ ZACZYNA GEOCODER');
+    this.geocoder.geocode({ 'location': latlng }, function (results, status) {
+      if (status === this.google.maps.GeocoderStatus.OK) {
+        if (results[1]) {
+          console.log('Location: ' + results[1].formatted_address + '\r\nLatitude: ' + event.latLng.lat() +
+            'l\r\nLongitude:' + event.latLng.lng());
+          this.locationString = results[1].formatted_address;
+          console.log('jestem w GEOCODERZE W IF, JAK WIDAĆ ADRES JEST:' + this.locationString);
+        }
+      }
 
+      //  console.log(results);
+      //  console.table(results[1].formatted_address);
+    });
 
+    console.log('jestem poza iF, ADRES POWINIEN BYĆ O TU:' + this.locationString + ' A NI MA');
     const contentInfo = '<html>' +
       '<head>' +
       '<style>' +
@@ -259,7 +275,7 @@ export class GoogleMapComponent implements OnInit {
       'left: 10 !important;' +
       'color:blue' +
       'width:500px !important;' +
-      'height:50px !important;' +
+      'height:150px !important;' +
       'padding-left: 10px;' +
       'margin:3px 6px 0px 0px;' +
       '}' +
@@ -268,12 +284,13 @@ export class GoogleMapComponent implements OnInit {
       '<body>' +
       '<div class="gm-style-iw">' +
       '<p>' + event.latLng.lat() + ', ' + event.latLng.lng() + '</p>' +
+      '<p>' + this.locationString + '</p>' +
       '</div>' +
       '</body>' +
       '</html>';
 
     const info = new google.maps.InfoWindow({
-      content: contentInfo
+      content: this.locationString.toString()
 
     });
 
@@ -288,6 +305,7 @@ export class GoogleMapComponent implements OnInit {
     this.tempMarker = { lat: 0, lng: 0 };
 
   }
+
 
   drawPath() {
     // console.log(this.markersArray);
@@ -370,6 +388,7 @@ export class GoogleMapComponent implements OnInit {
   showArrayMarkers() {
 
     this.pressedNodes.forEach(
+
       element => {
         console.log(element);
       }
@@ -445,6 +464,10 @@ export class GoogleMapComponent implements OnInit {
   }
   dialogTest(): void {
     this.dialogComponent.openDialog();
+  }
+
+  showMarkersToRemove() {
+    console.table(this.markersArray);
   }
 
 
