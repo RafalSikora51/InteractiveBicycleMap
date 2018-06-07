@@ -9,11 +9,14 @@ import { SegmentComponent } from '../segment/segment.component';
 import { SegmentPointSet } from '../Model/SegmentPointSet';
 import { GoogleMapService } from './google-map.service';
 import { Point } from '../Model/point';
+import { NodeAddress } from '../Model/NodeAddress';
 import { Observable, of } from 'rxjs';
 import { HttpResponse } from 'selenium-webdriver/http';
 import { MatDialogModule } from '@angular/material/dialog';
 import { DialogComponent } from '../dialog/dialog.component';
-
+import { MatSnackBar } from '@angular/material';
+import { BrowserModule } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 @Component({
   selector: 'app-google-map',
@@ -33,11 +36,17 @@ export class GoogleMapComponent implements OnInit {
   polyLines: any[] = [];
   pressedNodes: any[] = [];
   markersToRemove: any[] = [0, 0];
+  dragOperation = false;
+  addressArray: NodeAddress[] = [];
+  recycledMarkers: NodeAddress[] = [];
+  recycledMarkersWithoutAdress: Array<number> = [0];
+  isMarkerClickable = true;
   listOne: Array<string> = ['Coffee', 'Orange Juice', 'Red Wine', 'Unhealty drink!', 'Water'];
   locationString: String = ' ';
   constructor(private segmentService: SegmentService,
     private segmentComponent: SegmentComponent,
-    private dialogComponent: DialogComponent
+    private dialogComponent: DialogComponent,
+    public snackBarComponent: MatSnackBar
 
   ) {
     this.addBicycleLayerEnable = false;
@@ -55,6 +64,7 @@ export class GoogleMapComponent implements OnInit {
   googleMap: google.maps.Map;
   geocoder = new google.maps.Geocoder;
 
+  returnValue: string;
 
   ngOnInit() {
 
@@ -69,11 +79,12 @@ export class GoogleMapComponent implements OnInit {
     };
 
     this.googleMap = new google.maps.Map(mapCanvas, mapOptions);
+    this.geocoder = new google.maps.Geocoder();
 
-    google.maps.event.addListener(this.googleMap, 'click', (event) => {
-      this.placeMarker(event);
+    //  google.maps.event.addListener(this.googleMap, 'click', (event) => {
+    //   this.placeMarker(event);
 
-    });
+    //  });
 
     this.markersArray.pop();
     this.markersArray.pop();
@@ -82,6 +93,7 @@ export class GoogleMapComponent implements OnInit {
     this.markersToRemove.pop();
     this.markersToRemove.pop();
     this.pressedNodes.push();
+    this.recycledMarkers.push();
 
   }
 
@@ -97,13 +109,14 @@ export class GoogleMapComponent implements OnInit {
   }
 
 
+
   getNodes(): void {
     const that = this;
     this.segmentService.getAllNodes().subscribe(
       nodes => {
         this.nodesArray = nodes;
-        console.log('Jestem w getNodes');
-        // console.table(nodes);
+        // console.log('Jestem w getNodes');
+        //console.table(this.nodesArray);
 
         this.nodesArray.forEach(node => {
 
@@ -116,16 +129,12 @@ export class GoogleMapComponent implements OnInit {
           markerTemp.lng = point.lng;
 
           marker = new google.maps.Marker({
+            icon: '/assets/blackpin.png',
             position: markerTemp,
             map: this.googleMap,
             title: 'id: ' + point.id + ', latlng: ' + ' ' + point.lat + '    ' + point.lng,
           });
 
-
-
-          // '<div id="content">'+
-          // '<p><b>Uluru</b></p>' +
-          // '</div>';
           const contentInfo = '<p><app-dialog></app-dialog></p>';
 
           const info2 = new google.maps.InfoWindow({
@@ -133,51 +142,19 @@ export class GoogleMapComponent implements OnInit {
 
           });
 
-
-
-          // const info2 = new google.maps.InfoWindow({
-          //   content: '<html>' +
-          //     '<head>' +
-          //     '<style>' +
-          //     'p {' +
-          //     'color: blue;' +
-          //     'font-size:15px' +
-          //     '}' +
-          //     '.gm-style-iw {' +
-          //     'top: 0 !important;' +
-          //     'left: 10 !important;' +
-          //     'color:blue' +
-          //     'width:500px !important;' +
-          //     'height:50px !important;' +
-          //     'padding-left: 10px;' +
-          //     'margin:3px 6px 0px 0px;' +
-          //     '}' +
-          //     '</style>' +
-          //     '</head>' +
-          //     '<body>' +
-          //     '<div class="gm-style-iw">' +
-          //     '<p>' + 'ID: ' + point.id + ' LatLng: ' + point.lat + ', ' + point.lng + '</p>' +
-          //     '</div>' +
-
-          //     '</body>' +
-          //     '</html>',
-
-          // });
-
-
-          // '<app-dialog></app-dialog>' +
-
-
           marker.addListener('click', function () {
             console.log('klikam na end ' + point.id);
             // info2.open(this.googleMap, marker);
             marker.setIcon('/assets/pin.png');
             that.pressedNodes.push(point.id);
             that.markersToRemove.push(marker);
-            that.markersArray.push(point);
+
+            marker.setClickable(false);
             // that.DialogComponent.openDialog();
 
             // that.dialogComponent.openDialog();
+
+            that.geocodeLatLng(that.geocoder, that.googleMap, point.lat, point.lng, point.id, marker);
 
           });
         });
@@ -190,6 +167,61 @@ export class GoogleMapComponent implements OnInit {
     );
   }
 
+  // tslint:disable-next-line:no-shadowed-variable
+  geocodeLatLng(geocoder, map, latt: any, lngg: any, idd: number, marker) {
+    const that = this;
+    const latlng = new google.maps.LatLng(latt, lngg);
+    geocoder.geocode({ 'location': latlng }, function (results, status) {
+      if (status === 'OK') {
+        if (results[0]) {
+          const place: NodeAddress = { id: idd, address: results[0].formatted_address };
+          that.addressArray.push(place);
+          let splittedResult = results[0].formatted_address;
+          splittedResult = splittedResult.split(',', 1);
+          const contentInfo = '<html>' +
+            '<head>' +
+            '<style>' +
+            'p {' +
+            'color: black;' +
+            'font-size:15px;' +
+            'font-weight: normal;' +
+            '}' +
+            '.gm-style-iw {' +
+            'top: 0 !important;' +
+            'left: 10 !important;' +
+            'color:black' +
+            'width:500px !important;' +
+            'height:50px !important;' +
+            'padding-left: 10px;' +
+            'margin:3px 6px 0px 0px;' +
+            '}' +
+            '</style>' +
+            '</head>' +
+            '<body>' +
+            '<div class="gm-style-iw">' +
+            '<p>' + 'Adres: ' + splittedResult + '</p>' +
+            '</div>' +
+
+            '</body>' +
+            '</html>';
+
+
+          const info2 = new google.maps.InfoWindow({
+            content: contentInfo
+          });
+          if (info2) {
+            info2.close();
+          }
+          info2.open(this.googleMap, marker);
+
+        } else {
+          console.log('No results found');
+        }
+      } else {
+        console.log('Geocoder failed due to: ' + status);
+      }
+    });
+  }
 
   getShortestPath(finalRoad: any): boolean {
 
@@ -236,6 +268,11 @@ export class GoogleMapComponent implements OnInit {
     return true;
   }
 
+
+
+
+
+
   placeMarker(event) {
 
     const marker = new google.maps.Marker({
@@ -247,47 +284,6 @@ export class GoogleMapComponent implements OnInit {
     const tempInfo = '' + event.latLng.lat() + ', ' + event.latLng.lng();
     const latlng = new google.maps.LatLng(event.latLng.lat(), event.latLng.lng());
     this.geocoder = new google.maps.Geocoder();
-    console.log('TU SIĘ ZACZYNA GEOCODER');
-    this.geocoder.geocode({ 'location': latlng }, function (results, status) {
-      if (status === this.google.maps.GeocoderStatus.OK) {
-        if (results[1]) {
-          console.log('Location: ' + results[1].formatted_address + '\r\nLatitude: ' + event.latLng.lat() +
-            'l\r\nLongitude:' + event.latLng.lng());
-          this.locationString = results[1].formatted_address;
-          console.log('jestem w GEOCODERZE W IF, JAK WIDAĆ ADRES JEST:' + this.locationString);
-        }
-      }
-
-      //  console.log(results);
-      //  console.table(results[1].formatted_address);
-    });
-
-    console.log('jestem poza iF, ADRES POWINIEN BYĆ O TU:' + this.locationString + ' A NI MA');
-    const contentInfo = '<html>' +
-      '<head>' +
-      '<style>' +
-      'p {' +
-      'color: blue;' +
-      'font-size:15px' +
-      '}' +
-      '.gm-style-iw {' +
-      'top: 0 !important;' +
-      'left: 10 !important;' +
-      'color:blue' +
-      'width:500px !important;' +
-      'height:150px !important;' +
-      'padding-left: 10px;' +
-      'margin:3px 6px 0px 0px;' +
-      '}' +
-      '</style>' +
-      '</head>' +
-      '<body>' +
-      '<div class="gm-style-iw">' +
-      '<p>' + event.latLng.lat() + ', ' + event.latLng.lng() + '</p>' +
-      '<p>' + this.locationString + '</p>' +
-      '</div>' +
-      '</body>' +
-      '</html>';
 
     const info = new google.maps.InfoWindow({
       content: this.locationString.toString()
@@ -308,7 +304,6 @@ export class GoogleMapComponent implements OnInit {
 
 
   drawPath() {
-    // console.log(this.markersArray);
     const Path = new google.maps.Polyline({
       path: this.markersArray,
       geodesic: true,
@@ -348,12 +343,6 @@ export class GoogleMapComponent implements OnInit {
         markerTemp.lat = point.lat;
         markerTemp.lng = point.lng;
         this.markersArray.push(markerTemp);
-
-        // marker = new google.maps.Marker({
-        // position: markerTemp,
-        //    map: this.googleMap,
-        // icon: 'http://maps.google.com/mapfiles/kml/pal4/icon49.png'
-        // });
       });
 
       this.markersArray.push(end_markerTemp);
@@ -395,52 +384,97 @@ export class GoogleMapComponent implements OnInit {
     );
 
   }
+  addToRecycledMarkers(event: any) {
+    this.recycledMarkers.push(event);
 
-  doDijkstraOnList() {
-    this.showArrayMarkers();
-    this.dialogComponent.openDialog();
-    console.log(this.pressedNodes);
-
-    this.segmentService.dijkstraOnList(this.pressedNodes)
-      .subscribe(markers => {
-        this.markers = markers;
-        console.table(this.markers);
-        this.getShortestPath(this.markers);
-        this.dialogComponent.closeDialog();
-      });
-
-
-    console.log('tutaj wywolujemy request z naszymi klikenitymi id');
-    console.log('teraz czyscimy tablice aby nie bylo juz zapamietanych kliknietych ' +
-      'skoro dijkstra ywkonana (robimy miejsce na nowe)');
-    this.markers = [];
-    this.pressedNodes = [];
-    console.log('klikniete punkty to: ');
-    this.showArrayMarkers();
+    this.createMarkersWithoutAddress(this.recycledMarkers);
 
   }
 
-  doBellmanOnList() {
-    this.showArrayMarkers();
-    this.dialogComponent.openDialog();
-    console.log(this.pressedNodes);
 
-    this.segmentService.BellmanOnList(this.pressedNodes)
-      .subscribe(markers => {
-        this.markers = markers;
-        console.table(this.markers);
-        this.getShortestPath(this.markers);
-        this.dialogComponent.closeDialog();
+  createMarkersWithoutAddress(recycledMarkers) {
+
+    console.log(recycledMarkers);
+
+  }
+
+  showrecycled() {
+    console.log('Recycled Markers:');
+    console.table(this.recycledMarkers);
+    console.log(' recycledMarkersWithoutAdress:');
+    console.log(this.recycledMarkersWithoutAdress);
+  }
+
+
+  doDijkstraOnList() {
+    console.log('pressedNodes na poczatku dijkstry: ' + this.pressedNodes);
+    if (this.pressedNodes.length <= 1) {
+      this.snackBarComponent.open('Za mało podanych punktów', 'OK', {
+        duration: 3000,
       });
+    } else {
+      this.showArrayMarkers();
+      this.dialogComponent.openDialog();
+      console.log(this.pressedNodes);
+
+      console.table(this.pressedNodes);
+      this.segmentService.dijkstraOnList(this.pressedNodes)
+        .subscribe(markers => {
+          this.markers = markers;
+          console.table(this.markers);
+          this.getShortestPath(this.markers);
+          this.dialogComponent.closeDialog();
+          this.markersToRemove[0].setIcon('/assets/greenpin.png');
+          for (let i = 1; i < this.markersToRemove.length - 1; i++) {
+            this.markersToRemove[i].setIcon('/assets/redpin.png');
+          }
+          this.markersToRemove[this.markersToRemove.length - 1].setIcon('/assets/placeholder.png');
+        });
 
 
-    console.log('tutaj wywolujemy request z naszymi klikenitymi id');
-    console.log('teraz czyscimy tablice aby nie bylo juz zapamietanych kliknietych ' +
-      'skoro dijkstra ywkonana (robimy miejsce na nowe)');
-    this.markers = [];
-    this.pressedNodes = [];
-    console.log('klikniete punkty to: ');
-    this.showArrayMarkers();
+      // console.log('tutaj wywolujemy request z naszymi klikenitymi id');
+      // console.log('teraz czyscimy tablice aby nie bylo juz zapamietanych kliknietych ' +
+      //  'skoro dijkstra ywkonana (robimy miejsce na nowe)');
+      this.markers = [];
+      this.pressedNodes = [];
+      console.log('klikniete punkty to (pressedNodes): ');
+      this.showArrayMarkers();
+    }
+  }
+
+  doBellmanOnList() {
+    if (this.pressedNodes.length <= 1) {
+      this.snackBarComponent.open('Za mało podanych punktów', 'OK', {
+        duration: 3000,
+
+      });
+    } else {
+      this.showArrayMarkers();
+      this.dialogComponent.openDialog();
+      console.log(this.pressedNodes);
+
+      this.segmentService.BellmanOnList(this.pressedNodes)
+        .subscribe(markers => {
+          this.markers = markers;
+          console.table(this.markers);
+          this.getShortestPath(this.markers);
+          this.dialogComponent.closeDialog();
+          this.markersToRemove[0].setIcon('/assets/greenpin.png');
+          for (let i = 1; i < this.markersToRemove.length - 1; i++) {
+            this.markersToRemove[i].setIcon('/assets/redpin.png');
+          }
+          this.markersToRemove[this.markersToRemove.length - 1].setIcon('/assets/placeholder.png');
+        });
+
+
+      // console.log('tutaj wywolujemy request z naszymi klikenitymi id');
+      // console.log('teraz czyscimy tablice aby nie bylo juz zapamietanych kliknietych ' +
+      //   'skoro dijkstra ywkonana (robimy miejsce na nowe)');
+      this.markers = [];
+      this.pressedNodes = [];
+      console.log('klikniete punkty to: ');
+      this.showArrayMarkers();
+    }
   }
 
   removePolylines() {
@@ -451,15 +485,17 @@ export class GoogleMapComponent implements OnInit {
 
   removeMarkers() {
     for (let i = 0; i < this.markersToRemove.length; i++) {
-      this.markersToRemove[i].setIcon();
-      // setMap(null);
+      this.markersToRemove[i].setIcon('/assets/blackpin.png');
+      this.markersToRemove[i].setClickable(true);
     }
   }
 
   mapReset(): void {
     this.removePolylines();
     this.removeMarkers();
-
+    this.addressArray = [];
+    this.pressedNodes = [];
+    this.isMarkerClickable = true;
 
   }
   dialogTest(): void {
@@ -471,7 +507,9 @@ export class GoogleMapComponent implements OnInit {
   }
 
 
-
+  showAddresses() {
+    console.table(this.addressArray);
+  }
 
 }
 

@@ -21,7 +21,7 @@ export class DialogComponent {
       width: '250px',
       height: '100px',
       hasBackdrop: true,
-      data: { name: this.name, animal: this.animal }
+
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -47,8 +47,8 @@ export class DialogOverviewExampleDialog {
   constructor(
     public dialogRef: MatDialogRef<DialogOverviewExampleDialog>,
     @Inject(MAT_DIALOG_DATA) public data: any) {
-      dialogRef.disableClose = true;
-     }
+    dialogRef.disableClose = true;
+  }
 
   onNoClick(): void {
     this.dialogRef.close();

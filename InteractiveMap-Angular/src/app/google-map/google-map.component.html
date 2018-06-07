@@ -4,7 +4,7 @@
       <mat-icon class="size-44">directions_bike</mat-icon>
       <span class="example-spacer"></span>
       <span>Interaktywna mapa ścieżek rowerowych</span>
-      <a mat-raised-button color="primary" href="https://github.com/RafalSikora51/InteractiveMap">GitHub</a>
+      <a mat-raised-button color="primary" href="https://github.com/RafalSikora51/interactiveMap">GitHub</a>
       <button mat-icon-button [mat-menu-trigger-for]="menu">
         <mat-icon>menu</mat-icon>
       </button>
@@ -12,45 +12,85 @@
 
   </mat-toolbar>
   <mat-menu x-position="before" #menu="matMenu">
-    <button mat-menu-item>Opcja 1</button>
+
     <p>
-      <button mat-button (click)="sidenav.toggle()">Toggle</button>
+
     </p>
 
 
   </mat-menu>
   <mat-sidenav-container class="example-container">
-    <mat-sidenav #sidenav mode="over">
-      <h3>Szczegóły dotyczące punktów:</h3>
+    <mat-sidenav #sidenav mode="over" style='min-width: 1000px; font-family: Roboto;'>
+      Szczegóły dotyczące punktów:
       <mat-divider></mat-divider>
+      <mat-grid-list cols="2" rowHeight="1:2">
+        <mat-grid-tile>
+          <div class="row">
+            <div class="col-sm-3">
+              <div class="panel panel-success">
+                <div class="panel-heading">
+                  Wyznacz kolejność punktów
+                  <mat-divider></mat-divider>
+                  <mat-divider></mat-divider>
+                  <mat-divider></mat-divider>
+                </div>
+                <div class="panel-body">
+                  <ul class="list-group" dnd-sortable-container [sortableData]="addressArray" [dropZones]="['delete-dropZone']">
+                    <mat-list *ngIf="addressArray">
+                      <mat-list-item *ngFor="let marker of addressArray; let i = index" class="list-group-item" dnd-sortable [sortableIndex]="i">{{marker.address}}</mat-list-item>
+                    </mat-list>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-grid-tile>
+        <mat-grid-tile>
+          <div class="col-sm-6">
+            <div class="panel panel-default">
+              <div class="panel-body">
+                Wybrane punkty:
+                <mat-divider></mat-divider>
+                <mat-divider></mat-divider>
+                <mat-divider></mat-divider>
 
-      <div class="row">
-        <div class="col-sm-3">
-          <div class="panel panel-success">
-            <div class="panel-heading">
-              Favorite drinks
-            </div>
-            <div class="panel-body">
-              <ul class="list-group" dnd-sortable-container [sortableData]="markersToRemove">
-                <mat-list *ngIf="markersToRemove">
-                  <mat-list-item *ngFor="let marker of markersToRemove; let i = index" class="list-group-item" dnd-sortable [sortableIndex]="i">{{marker}}</mat-list-item>
+                <mat-list *ngIf="addressArray">
+                  <mat-list-item *ngFor="let marker of addressArray; let i = index">{{i + 1}}. {{marker.address}}</mat-list-item>
                 </mat-list>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <div class="col-sm-6">
-          <div class="panel panel-default">
-            <div class="panel-body">
-              My prefences:
-              <br/>
-              <span *ngFor="let marker of markersToRemove; let i = index">{{i + 1}}) {{marker}}
                 <br/>
-              </span>
+
+              </div>
+            </div>
+            <button mat-raised-button color="primary" (click)="sidenav.toggle()" style="width: 100%;">Przejdź Dalej</button>
+          </div>
+        </mat-grid-tile>
+
+
+        <mat-grid-tile>
+          <div class="row">
+            <div class="col-sm-6">
+              <div class="panel panel-success">
+                <div class="panel-heading">
+                  Punkty wykluczone z planowania trasy:
+                  <mat-divider></mat-divider>
+                  <mat-divider></mat-divider>
+                  <mat-divider></mat-divider>
+                </div>
+                <div class="panel panel-default">
+                  <div class="panel-body" dnd-sortable-container [dropZones]="['delete-dropZone']" (onDropSuccess)="addToRecycledMarkers(event)"
+                    [sortableData]="recycledMarkers">
+                    Recycle bin: Drag into me to delete it
+                    <br/>
+                  </div>
+                </div>
+                <mat-list *ngIf="recycledMarkers">
+                  <mat-list-item *ngFor="let marker of recycledMarkers; let i = index">{{i + 1}}. {{marker.address}}</mat-list-item>
+                </mat-list>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </mat-grid-tile>
+      </mat-grid-list>
     </mat-sidenav>
     <mat-sidenav-content>
       <div>
@@ -68,18 +108,23 @@
               <a mat-list-item (click)="addAllMarkersFromAPI()">Wyświetl ścieżki</a>
               <!-- <a mat-list-item (click)="getNodes()">Dodaj ścieżki do mapy</a> -->
               <mat-divider></mat-divider>
-              <a mat-list-item (click)=" addBicycleLayer()">Wyświetl ścieżki Google</a>
+              <a mat-list-item (click)=" sidenav.toggle()">Zaplanuj trasę</a>
               <mat-divider></mat-divider>
-              <a mat-list-item (click)="removeBicycleLayer()">Usuń ścieżki z mapy</a>
+              <!--  <a mat-list-item (click)=" addBicycleLayer()">Wyświetl ścieżki Google</a>
               <mat-divider></mat-divider>
+              <a mat-list-item (click)="removeBicycleLayer()">Usuń ścieżki z mapy</a> 
+              <mat-divider></mat-divider> -->
               <a mat-list-item (click)="doDijkstraOnList()">Wyznacz ścieżkę - Dijkstra</a>
               <mat-divider></mat-divider>
               <a mat-list-item (click)="doBellmanOnList()">Wyznacz ścieżkę - Bellman-Ford</a>
               <mat-divider></mat-divider>
               <a mat-list-item (click)="mapReset()">Reset mapy</a>
               <mat-divider></mat-divider>
-              <a mat-list-item (click)="showMarkersToRemove()">pokaz NodesToRemove</a>
-
+               <a mat-list-item (click)="showMarkersToRemove()">pokaz NodesToRemove</a>
+              <mat-divider></mat-divider>
+              <a mat-list-item (click)="showAddresses()">pokaz id i adresy nodeow</a>
+              <mat-divider></mat-divider>
+              <a mat-list-item (click)="showrecycled()">pokaz id i adresy recycled</a> 
             </mat-nav-list>
           </mat-sidenav>
           <mat-sidenav-content>
@@ -99,12 +144,14 @@
                 <mat-card-title style=" margin-left:20px; font-size:150%; min-width:200px;">Szczegóły trasy</mat-card-title>
               </mat-card-header>
               <mat-card-content>
-                asdasdasddas
+                <mat-horizontal-stepper *ngIf="addressArray.length>=1">
+                  <div *ngFor="let marker of addressArray;">
+                    <mat-step>{{marker.address}}</mat-step>
+                  </div>
+                </mat-horizontal-stepper>
               </mat-card-content>
             </mat-tab>
-            <mat-tab label="Szczegóły">
-              <p>blabla</p>
-            </mat-tab>
+
           </mat-tab-group>
 
         </mat-card>
