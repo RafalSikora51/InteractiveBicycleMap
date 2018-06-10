@@ -8,15 +8,19 @@ import 'rxjs/add/operator/map';
 import 'rxjs/add/observable/throw';
 import { Segment } from '../Model/segment';
 import { SegmentPointSet } from '../Model/SegmentPointSet';
+import { ParamArray } from '../Model/ParamArray';
+import { environment } from '../../environments/environment';
+
 @Injectable()
 export class SegmentService {
 
-  private SEGMENTS_API_URL = 'http://localhost:9090/segments';
-  private SEGMENTSALL_API_URL = 'http://localhost:9090/segments/all';
-  private DIJKSTRA = 'http://localhost:9090/graph/dijkstra/';
-  private NODES_API_URL = 'http://localhost:9090/graph/nodes';
-  private DIJKSTRALIST_API_URL = 'http://localhost:9090/graph/dijkstra';
-  private BELLMAN_API_URL = 'http://localhost:9090/graph/bellman';
+  private apiUrl = environment.apiUrl;
+  private SEGMENTS_API_URL = this.apiUrl + '/segments';
+  private SEGMENTSALL_API_URL = this.apiUrl + '/segments/all';
+  private DIJKSTRA = this.apiUrl + '/graph/dijkstra/';
+  private NODES_API_URL = this.apiUrl + '/graph/nodes';
+  private DIJKSTRALIST_API_URL = this.apiUrl + '/graph/dijkstra';
+  private BELLMAN_API_URL = this.apiUrl + '/graph/bellman';
 
 
   constructor(private http: HttpClient) { }
@@ -78,21 +82,21 @@ export class SegmentService {
       );
   }
 
-  public dijkstraOnList(markers: any[]): Observable<any> {
+  public dijkstraOnList(params: ParamArray): Observable<any> {
 
-    return this.http.post(this.DIJKSTRALIST_API_URL, markers)
+    return this.http.post(this.DIJKSTRALIST_API_URL, params)
       .pipe(
-        catchError(this.handleError('addHero', markers))
+        catchError(this.handleError('dijkstraOnList', params))
       );
 
   }
 
 
-  public BellmanOnList(markers: any[]): Observable<any> {
+  public BellmanOnList(params: ParamArray): Observable<any> {
 
-    return this.http.post(this.BELLMAN_API_URL, markers)
+    return this.http.post(this.BELLMAN_API_URL, params)
       .pipe(
-        catchError(this.handleError('addHero', markers))
+        catchError(this.handleError('BellmanOnList', params))
       );
 
   }

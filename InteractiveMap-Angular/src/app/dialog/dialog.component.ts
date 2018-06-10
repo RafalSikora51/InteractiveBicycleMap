@@ -18,8 +18,8 @@ export class DialogComponent {
 
   openDialog(): void {
     const dialogRef = this.dialog.open(DialogOverviewExampleDialog, {
-      width: '250px',
-      height: '100px',
+      width: '350px',
+      height: '150px',
       hasBackdrop: true,
 
     });

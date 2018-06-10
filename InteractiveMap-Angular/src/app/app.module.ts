@@ -78,7 +78,6 @@ import { DragtestComponent } from './dragtest/dragtest.component';
     MatToolbarModule,
     MatIconModule,
     MatCardModule,
-    UiSwitchModule,
     MatAutocompleteModule,
     MatButtonModule,
     MatButtonToggleModule,

@@ -10,13 +10,15 @@ import { SegmentPointSet } from '../Model/SegmentPointSet';
 import { GoogleMapService } from './google-map.service';
 import { Point } from '../Model/point';
 import { NodeAddress } from '../Model/NodeAddress';
-import { Observable, of } from 'rxjs';
+import { Observable, of, config } from 'rxjs';
 import { HttpResponse } from 'selenium-webdriver/http';
 import { MatDialogModule } from '@angular/material/dialog';
 import { DialogComponent } from '../dialog/dialog.component';
 import { MatSnackBar } from '@angular/material';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { ParamArray } from '../Model/ParamArray';
+import { Injectable, Pipe, PipeTransform } from '@angular/core';
 
 @Component({
   selector: 'app-google-map',
@@ -38,10 +40,14 @@ export class GoogleMapComponent implements OnInit {
   markersToRemove: any[] = [0, 0];
   dragOperation = false;
   addressArray: NodeAddress[] = [];
+  addressArrayForStepper: NodeAddress[] = [];
   recycledMarkers: NodeAddress[] = [];
-  recycledMarkersWithoutAdress: Array<number> = [0];
+  recycledMarkersWithoutAdress: Array<number> = [];
+  pressedMarkersWithoutAddress: Array<number> = [];
+  paramArray: ParamArray = { pressedNodes: [], recycledNodes: [] };
+  length: any = 0;
+  infowindows: any = [];
   isMarkerClickable = true;
-  listOne: Array<string> = ['Coffee', 'Orange Juice', 'Red Wine', 'Unhealty drink!', 'Water'];
   locationString: String = ' ';
   constructor(private segmentService: SegmentService,
     private segmentComponent: SegmentComponent,
@@ -52,7 +58,6 @@ export class GoogleMapComponent implements OnInit {
     this.addBicycleLayerEnable = false;
     this.bikeLayer = new google.maps.BicyclingLayer();
     this.showArray = false;
-
   }
 
   showFiller = false;
@@ -97,10 +102,13 @@ export class GoogleMapComponent implements OnInit {
 
   }
 
+
+
   getSegments(): void {
     this.segmentService.getAllSegmentsWithPoints().subscribe(
       segments => {
         this.segmentPointsSet = segments;
+        this.addAllMarkersFromAPI();
       },
       error => {
         console.log(error);
@@ -116,7 +124,7 @@ export class GoogleMapComponent implements OnInit {
       nodes => {
         this.nodesArray = nodes;
         // console.log('Jestem w getNodes');
-        //console.table(this.nodesArray);
+        // console.table(this.nodesArray);
 
         this.nodesArray.forEach(node => {
 
@@ -135,12 +143,12 @@ export class GoogleMapComponent implements OnInit {
             title: 'id: ' + point.id + ', latlng: ' + ' ' + point.lat + '    ' + point.lng,
           });
 
-          const contentInfo = '<p><app-dialog></app-dialog></p>';
+          //    const contentInfo = '<p><app-dialog></app-dialog></p>';
 
-          const info2 = new google.maps.InfoWindow({
-            content: contentInfo
+          //   const info2 = new google.maps.InfoWindow({
+          //     content: contentInfo
 
-          });
+          //   });
 
           marker.addListener('click', function () {
             console.log('klikam na end ' + point.id);
@@ -176,6 +184,7 @@ export class GoogleMapComponent implements OnInit {
         if (results[0]) {
           const place: NodeAddress = { id: idd, address: results[0].formatted_address };
           that.addressArray.push(place);
+          that.addressArrayForStepper.push(place);
           let splittedResult = results[0].formatted_address;
           splittedResult = splittedResult.split(',', 1);
           const contentInfo = '<html>' +
@@ -209,6 +218,7 @@ export class GoogleMapComponent implements OnInit {
           const info2 = new google.maps.InfoWindow({
             content: contentInfo
           });
+          that.infowindows.push(info2);
           if (info2) {
             info2.close();
           }
@@ -225,47 +235,62 @@ export class GoogleMapComponent implements OnInit {
 
   getShortestPath(finalRoad: any): boolean {
 
-    let points = [];
+    if (finalRoad === null) {
+      this.snackBarComponent.open('Ścieżka nie istnieje / nie można wyznaczyć', 'OK', {
+        duration: 3000,
+        panelClass: ['success-snackbar']
 
-    let start_point;
-    let end_point;
+      });
+    } else {
 
-    finalRoad.forEach(element => {
 
-      start_point = element['start_point'];
-      end_point = element['end_point'];
-      const start_markerTemp: Marker = { lat: 0, lng: 0 };
-      const end_markerTemp: Marker = { lat: 0, lng: 0 };
-      start_markerTemp.lat = start_point.lat;
-      start_markerTemp.lng = start_point.lng;
-      end_markerTemp.lat = end_point.lat;
-      end_markerTemp.lng = end_point.lng;
-      points = element['points'];
-      this.dijkstraArray.push(start_markerTemp);
+      let points = [];
 
-      points.forEach(point => {
-        const markerTemp: Marker = { lat: 0, lng: 0 };
-        markerTemp.lat = point.lat;
-        markerTemp.lng = point.lng;
-        this.dijkstraArray.push(markerTemp);
+      let start_point;
+      let end_point;
+      this.length = 0;
+      finalRoad.forEach(element => {
+        this.length += element.length;
+        console.log(element.length);
+        start_point = element['start_point'];
+        end_point = element['end_point'];
+        const start_markerTemp: Marker = { lat: 0, lng: 0 };
+        const end_markerTemp: Marker = { lat: 0, lng: 0 };
+        start_markerTemp.lat = start_point.lat;
+        start_markerTemp.lng = start_point.lng;
+        end_markerTemp.lat = end_point.lat;
+        end_markerTemp.lng = end_point.lng;
+        points = element['points'];
+        this.dijkstraArray.push(start_markerTemp);
+
+        points.forEach(point => {
+          const markerTemp: Marker = { lat: 0, lng: 0 };
+          markerTemp.lat = point.lat;
+          markerTemp.lng = point.lng;
+
+
+          this.dijkstraArray.push(markerTemp);
+        });
+
+        this.dijkstraArray.push(end_markerTemp);
+
       });
 
-      this.dijkstraArray.push(end_markerTemp);
+      const Path2 = new google.maps.Polyline({
+        path: this.dijkstraArray,
+        geodesic: true,
+        editable: false,
+        strokeColor: '#043596',
+        strokeOpacity: 1,
+        strokeWeight: 7,
+      });
+      Path2.setMap(this.googleMap);
+      this.polyLines.push(Path2);
+      this.dijkstraArray = [];
 
-    });
+      return true;
+    }
 
-    const Path2 = new google.maps.Polyline({
-      path: this.dijkstraArray,
-      geodesic: true,
-      editable: false,
-      strokeColor: '#043596',
-      strokeOpacity: 1,
-      strokeWeight: 7,
-    });
-    Path2.setMap(this.googleMap);
-    this.polyLines.push(Path2);
-    this.dijkstraArray = [];
-    return true;
   }
 
 
@@ -384,19 +409,7 @@ export class GoogleMapComponent implements OnInit {
     );
 
   }
-  addToRecycledMarkers(event: any) {
-    this.recycledMarkers.push(event);
 
-    this.createMarkersWithoutAddress(this.recycledMarkers);
-
-  }
-
-
-  createMarkersWithoutAddress(recycledMarkers) {
-
-    console.log(recycledMarkers);
-
-  }
 
   showrecycled() {
     console.log('Recycled Markers:');
@@ -405,9 +418,45 @@ export class GoogleMapComponent implements OnInit {
     console.log(this.recycledMarkersWithoutAdress);
   }
 
+  createListsWithNodeIDs() {
+    this.addressArray.forEach(element => {
+      console.log(element.id);
+      this.pressedMarkersWithoutAddress.push(element.id);
+    });
+    this.recycledMarkers.forEach(element => {
+      console.log(element.id);
+      this.recycledMarkersWithoutAdress.push(element.id);
+    });
+
+
+  }
+
+  trackBy(addressArrayForStepper: NodeAddress): NodeAddress { return addressArrayForStepper; }
+
+
+
 
   doDijkstraOnList() {
+    this.addressArrayForStepper = this.addressArray;
+    this.createListsWithNodeIDs();
+    console.table('recycled:' + this.recycledMarkers);
+
+    console.table('recycledwithoutaddress' + this.recycledMarkersWithoutAdress);
+    console.table('pressedwithoutaddess' + this.pressedMarkersWithoutAddress);
+
+    this.pressedMarkersWithoutAddress.forEach(element => {
+      this.paramArray.pressedNodes.push(element);
+    });
+    this.recycledMarkersWithoutAdress.forEach(element => {
+      this.paramArray.recycledNodes.push(element);
+    });
+
+
+    console.log(this.paramArray.pressedNodes);
+    console.log(this.paramArray.recycledNodes);
+
     console.log('pressedNodes na poczatku dijkstry: ' + this.pressedNodes);
+
     if (this.pressedNodes.length <= 1) {
       this.snackBarComponent.open('Za mało podanych punktów', 'OK', {
         duration: 3000,
@@ -415,15 +464,13 @@ export class GoogleMapComponent implements OnInit {
     } else {
       this.showArrayMarkers();
       this.dialogComponent.openDialog();
-      console.log(this.pressedNodes);
-
-      console.table(this.pressedNodes);
-      this.segmentService.dijkstraOnList(this.pressedNodes)
+      this.segmentService.dijkstraOnList(this.paramArray)
         .subscribe(markers => {
           this.markers = markers;
           console.table(this.markers);
           this.getShortestPath(this.markers);
           this.dialogComponent.closeDialog();
+
           this.markersToRemove[0].setIcon('/assets/greenpin.png');
           for (let i = 1; i < this.markersToRemove.length - 1; i++) {
             this.markersToRemove[i].setIcon('/assets/redpin.png');
@@ -431,18 +478,36 @@ export class GoogleMapComponent implements OnInit {
           this.markersToRemove[this.markersToRemove.length - 1].setIcon('/assets/placeholder.png');
         });
 
-
-      // console.log('tutaj wywolujemy request z naszymi klikenitymi id');
-      // console.log('teraz czyscimy tablice aby nie bylo juz zapamietanych kliknietych ' +
-      //  'skoro dijkstra ywkonana (robimy miejsce na nowe)');
       this.markers = [];
       this.pressedNodes = [];
+      this.addressArray = [];
+      this.paramArray.pressedNodes = [];
       console.log('klikniete punkty to (pressedNodes): ');
+      this.recycledMarkers = [];
+      console.table(this.pressedNodes);
       this.showArrayMarkers();
     }
   }
 
   doBellmanOnList() {
+    this.addressArrayForStepper = this.addressArray;
+    this.createListsWithNodeIDs();
+    console.table('recycled:' + this.recycledMarkers);
+
+    console.table('recycledwithoutaddress' + this.recycledMarkersWithoutAdress);
+    console.table('pressedwithoutaddess' + this.pressedMarkersWithoutAddress);
+
+    this.pressedMarkersWithoutAddress.forEach(element => {
+      this.paramArray.pressedNodes.push(element);
+    });
+    this.recycledMarkersWithoutAdress.forEach(element => {
+      this.paramArray.recycledNodes.push(element);
+    });
+
+
+    console.log(this.paramArray.pressedNodes);
+    console.log(this.paramArray.recycledNodes);
+
     if (this.pressedNodes.length <= 1) {
       this.snackBarComponent.open('Za mało podanych punktów', 'OK', {
         duration: 3000,
@@ -453,7 +518,7 @@ export class GoogleMapComponent implements OnInit {
       this.dialogComponent.openDialog();
       console.log(this.pressedNodes);
 
-      this.segmentService.BellmanOnList(this.pressedNodes)
+      this.segmentService.BellmanOnList(this.paramArray)
         .subscribe(markers => {
           this.markers = markers;
           console.table(this.markers);
@@ -466,13 +531,15 @@ export class GoogleMapComponent implements OnInit {
           this.markersToRemove[this.markersToRemove.length - 1].setIcon('/assets/placeholder.png');
         });
 
-
-      // console.log('tutaj wywolujemy request z naszymi klikenitymi id');
-      // console.log('teraz czyscimy tablice aby nie bylo juz zapamietanych kliknietych ' +
-      //   'skoro dijkstra ywkonana (robimy miejsce na nowe)');
       this.markers = [];
+      this.addressArray = [];
       this.pressedNodes = [];
-      console.log('klikniete punkty to: ');
+      // this.pressedMarkersWithoutAddress = [];
+      this.paramArray.pressedNodes = [];
+      console.log('klikniete punkty to (pressedNodes): ');
+      //   this.mapReset();
+      this.recycledMarkers = [];
+      console.table(this.pressedNodes);
       this.showArrayMarkers();
     }
   }
@@ -495,8 +562,22 @@ export class GoogleMapComponent implements OnInit {
     this.removeMarkers();
     this.addressArray = [];
     this.pressedNodes = [];
+    this.markers = [];
+    this.markersToRemove = [];
+    this.pressedNodes = [];
+    this.recycledMarkers = [];
+    this.pressedMarkersWithoutAddress = [];
+    this.recycledMarkersWithoutAdress = [];
+    this.paramArray.pressedNodes = [];
+    this.paramArray.pressedNodes = [];
     this.isMarkerClickable = true;
-
+    this.length = 0;
+    this.closeAllInfoWindows();
+  }
+  closeAllInfoWindows() {
+    for (let i = 0; i < this.infowindows.length; i++) {
+      this.infowindows[i].close();
+    }
   }
   dialogTest(): void {
     this.dialogComponent.openDialog();

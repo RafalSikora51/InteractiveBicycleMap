@@ -21,6 +21,7 @@ import com.interactive.map.entity.Point;
 import com.interactive.map.entity.Segment;
 import com.interactive.map.util.Graph;
 import com.interactive.map.util.Node;
+import com.interactive.map.util.ParamArray;
 
 @Component
 public class GraphDAO {
@@ -181,18 +182,17 @@ public class GraphDAO {
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<JSONObject> getShortestPathFromStartNodeToEndNodeBELLMAN(Graph graph, int startId, int endId) throws Exception {
+	public List<JSONObject> getShortestPathFromStartNodeToEndNodeBELLMAN(Graph graph, int startId, int endId)
+			throws Exception {
 		List<JSONObject> responseRoad = new JSONArray();
 
 		List<Node> nodes = graph.getNodes();
-		
+
 		calculateShortestPathFromSourceBellmanFord(graph, getNodeByGivenPointId(nodes, startId));
 
 		Optional<Point> sourcePointOptional = pointDAO.findPointByGivenId(startId);
 		Optional<Point> endPointOptional = pointDAO.findPointByGivenId(endId);
 
-		
-		
 		if (sourcePointOptional.isPresent() && endPointOptional.isPresent()) {
 			Node endNode = getNodeByGivenPointId(nodes, endId);
 
@@ -301,56 +301,137 @@ public class GraphDAO {
 		return graph;
 	}
 
+	public List<Node> removeRecycledNodes(ParamArray paramArray) {
+
+		List<Node> nodes = new ArrayList<Node>();
+		nodes = findAllNodes();
+		List<Segment> segments = segmentDAO.findAllSegments();
+		List<Integer> ids = new ArrayList<>(paramArray.getRecycledNodes());
+		List<Node> nodesToRemove = nodes.stream().filter(node -> ids.contains(node.getPoint().getId()))
+				.collect(Collectors.toList());
+
+		List<Segment> segmentsToRemove = new ArrayList<>();
+
+		nodesToRemove.forEach(node -> {
+			List<Segment> segs = findSegmentsForNode(node, segments);
+			segmentsToRemove.addAll(segs);
+		});
+
+		nodes.removeAll(nodesToRemove);
+		segments.removeAll(segmentsToRemove);
+
+		return nodes;
+
+	}
+
 	@SuppressWarnings("unchecked")
-	public List<JSONObject> getShortestPathFromList(List<Integer> chosenPointsID) throws Exception {
+	public List<JSONObject> getShortestPathFromListDijkstra(ParamArray paramArray) throws Exception {
 
 		List<JSONObject> jsonArrayResponse = new JSONArray();
-		List<Node> nodes = findAllNodes();
-		Map<Node, Map<Node, Segment>> adjacencyMap = createAdjacencyMap(nodes);
+		List<Node> nodes = new ArrayList<Node>();
+		nodes = findAllNodes();
+		
+		List<Segment> segments = segmentDAO.findAllSegments();
+		
+		List<Integer> ids = new ArrayList<>(paramArray.getRecycledNodes());
+		
+		List<Node> nodesToRemove = nodes.stream().filter(node -> ids.contains(node.getPoint().getId()))
+				.collect(Collectors.toList());
+
+		List<Segment> segmentsToRemove = new ArrayList<>();
+
+		nodesToRemove.forEach(node -> {
+			List<Segment> segs = findSegmentsForNode(node, segments);
+			segmentsToRemove.addAll(segs);
+		});
+
+		nodes.removeAll(nodesToRemove);
+		segments.removeAll(segmentsToRemove);
+		Map<Node, Map<Node, Segment>> adjacencyMap = createAdjacencyMap(nodes,segments);
 		Graph graph = new Graph(nodes, adjacencyMap);
-		for (int i = 1; i < chosenPointsID.size(); i++) {
+		for (int i = 1; i < paramArray.getPressedNodes().size(); i++) {
 
-			int sourceId = chosenPointsID.get(i - 1);
-			int endId = chosenPointsID.get(i);
+			int sourceId = paramArray.getPressedNodes().get(i - 1);
+			int endId = paramArray.getPressedNodes().get(i);
 
-			List<JSONObject> shortestPathFromStartNodeToEndNode = getShortestPathFromStartNodeToEndNode(graph,sourceId,
+			List<JSONObject> shortestPathFromStartNodeToEndNode = getShortestPathFromStartNodeToEndNode(graph, sourceId,
 					endId);
 			jsonArrayResponse.addAll(shortestPathFromStartNodeToEndNode);
-			
-			graph.getNodes().stream().forEach(node->{
+
+			graph.getNodes().stream().forEach(node -> {
 				node.getShortestPath().clear();
 				node.setDistance(Double.MAX_VALUE);
 			});
 		}
 		return jsonArrayResponse;
 	}
-	
+
+//	@SuppressWarnings("unchecked")
+//	public List<JSONObject> getShortestPathFromList(List<Integer> chosenPointsID) throws Exception {
+//
+//		List<JSONObject> jsonArrayResponse = new JSONArray();
+//		List<Node> nodes = findAllNodes();
+//		Map<Node, Map<Node, Segment>> adjacencyMap = createAdjacencyMap(nodes);
+//		Graph graph = new Graph(nodes, adjacencyMap);
+//		for (int i = 1; i < chosenPointsID.size(); i++) {
+//
+//			int sourceId = chosenPointsID.get(i - 1);
+//			int endId = chosenPointsID.get(i);
+//
+//			List<JSONObject> shortestPathFromStartNodeToEndNode = getShortestPathFromStartNodeToEndNode(graph, sourceId,
+//					endId);
+//			jsonArrayResponse.addAll(shortestPathFromStartNodeToEndNode);
+//
+//			graph.getNodes().stream().forEach(node -> {
+//				node.getShortestPath().clear();
+//				node.setDistance(Double.MAX_VALUE);
+//			});
+//		}
+//		return jsonArrayResponse;
+//	}
+
 	@SuppressWarnings("unchecked")
-	public List<JSONObject> getShortestPathFromListBELLMAN(List<Integer> chosenPointsID) throws Exception {
+	public List<JSONObject> getShortestPathFromListBELLMAN(ParamArray paramArray) throws Exception {
 
 		List<JSONObject> jsonArrayResponse = new JSONArray();
+
+		List<Node> nodes = new ArrayList<Node>();
+		nodes = findAllNodes();
 		
-		List<Node> nodes = findAllNodes();
-		Map<Node, Map<Node, Segment>> adjacencyMap = createAdjacencyMap(nodes);
+		List<Segment> segments = segmentDAO.findAllSegments();
+		
+		List<Integer> ids = new ArrayList<>(paramArray.getRecycledNodes());
+		
+		List<Node> nodesToRemove = nodes.stream().filter(node -> ids.contains(node.getPoint().getId()))
+				.collect(Collectors.toList());
+
+		List<Segment> segmentsToRemove = new ArrayList<>();
+
+		nodesToRemove.forEach(node -> {
+			List<Segment> segs = findSegmentsForNode(node, segments);
+			segmentsToRemove.addAll(segs);
+		});
+
+		nodes.removeAll(nodesToRemove);
+		segments.removeAll(segmentsToRemove);
+		Map<Node, Map<Node, Segment>> adjacencyMap = createAdjacencyMap(nodes,segments);
 		Graph graph = new Graph(nodes, adjacencyMap);
-		
-		for (int i = 1; i < chosenPointsID.size(); i++) {
 
-			int sourceId = chosenPointsID.get(i - 1);
-			int endId = chosenPointsID.get(i);
+		for (int i = 1; i < paramArray.getPressedNodes().size(); i++) {
 
-			List<JSONObject> shortestPathFromStartNodeToEndNode = getShortestPathFromStartNodeToEndNodeBELLMAN(graph, sourceId,
-					endId);
+			int sourceId = paramArray.getPressedNodes().get(i - 1);
+			int endId = paramArray.getPressedNodes().get(i);
+
+			List<JSONObject> shortestPathFromStartNodeToEndNode = getShortestPathFromStartNodeToEndNodeBELLMAN(graph,
+					sourceId, endId);
 			jsonArrayResponse.addAll(shortestPathFromStartNodeToEndNode);
-			graph.getNodes().stream().forEach(node->{
+			graph.getNodes().stream().forEach(node -> {
 				node.getShortestPath().clear();
 				node.setDistance(Double.MAX_VALUE);
 			});
 		}
 		return jsonArrayResponse;
 	}
-	
-	
 
 	private int getIndexWhenToStart(List<Node> pathWithEndNode, int startId) {
 		int startIndex = 0;
@@ -366,11 +447,12 @@ public class GraphDAO {
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<JSONObject> getShortestPathFromStartNodeToEndNode(Graph graph, int startId, int endId) throws Exception {
+	public List<JSONObject> getShortestPathFromStartNodeToEndNode(Graph graph, int startId, int endId)
+			throws Exception {
 		List<JSONObject> responseRoad = new JSONArray();
 
 		List<Node> nodes = graph.getNodes();
-		
+
 		calculateShortestPathFromSource(graph, getNodeByGivenPointId(nodes, startId));
 
 		Optional<Point> sourcePointOptional = pointDAO.findPointByGivenId(startId);

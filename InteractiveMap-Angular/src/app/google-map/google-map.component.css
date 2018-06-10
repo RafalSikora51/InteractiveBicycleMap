@@ -16,7 +16,6 @@ mat-sidenav {
   min-width: 300px;
 }
 
-
 .gm-style .gm-style-iw {
   background-color: #252525 !important;
   top: 0 !important;
@@ -48,4 +47,14 @@ mat-sidenav {
   float: left;
   width: 100%;
   padding: 10px;
+}
+p{
+  color: aliceblue;
+}
+
+snack-bar-container.success-snackbar {
+  background-color: #2ecc71;
+}
+.success-snackbar .mat-simple-snackbar {
+  color: #0f4c29;
 }

@@ -1,4 +1,14 @@
 com\interactive\map\entity\Point.class
+com\interactive\map\repo\SegmentDAO.class
+com\interactive\map\controller\GraphController.class
+com\interactive\map\util\Graph.class
+com\interactive\map\util\Node.class
+com\interactive\map\controller\SegmentController.class
 com\interactive\map\repo\PointDAO.class
+com\interactive\map\entity\Segment.class
+com\interactive\map\ServerApplication.class
+com\interactive\map\repo\GraphDAO.class
 com\interactive\map\util\SessionConnection.class
+com\interactive\map\util\HarvesineFormula.class
 com\interactive\map\controller\PointController.class
+com\interactive\map\util\ParamArray.class
