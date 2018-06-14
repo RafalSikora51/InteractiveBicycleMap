@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="maptest.maptest.AppTest" time="0.002" tests="1" errors="0" skipped="0" failures="0">
+<testsuite name="maptest.maptest.AppTest" time="0.005" tests="1" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.runtime.name" value="Java(TM) SE Runtime Environment"/>
     <property name="sun.boot.library.path" value="C:\Program Files\Java\jdk1.8.0_161\jre\bin"/>
@@ -26,9 +26,9 @@
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="user.variant" value=""/>
     <property name="os.name" value="Windows 10"/>
-    <property name="classworlds.conf" value="F:\eclipse-workspace\.metadata\.plugins\org.eclipse.m2e.launching\launches\m2conf3570886869754844964.tmp"/>
+    <property name="classworlds.conf" value="F:\eclipse-workspace\.metadata\.plugins\org.eclipse.m2e.launching\launches\m2conf4698730197588330065.tmp"/>
     <property name="sun.jnu.encoding" value="Cp1250"/>
-    <property name="java.library.path" value="C:\Program Files\Java\jdk1.8.0_161\bin;C:\WINDOWS\Sun\Java\bin;C:\WINDOWS\system32;C:\WINDOWS;C:/Program Files/Java/jdk1.8.0_161/jre/bin/server;C:/Program Files/Java/jdk1.8.0_161/jre/bin;C:/Program Files/Java/jdk1.8.0_161/jre/lib/amd64;C:\Program Files\Docker\Docker\Resources\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\Git\cmd;C:\Program Files\nodejs\;C:\Program Files\MySQL\MySQL Utilities 1.6\;F:\MATLAB\R2017a\runtime\win64;F:\MATLAB\R2017a\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\apache-maven-3.5.3\bin;C:\Program Files\MiKTeX 2.9\miktex\bin\x64\;C:\Users\Rafał\AppData\Local\Microsoft\WindowsApps;D:\Microsoft VS Code\bin;C:\Users\Rafał\AppData\Local\GitHubDesktop\bin;C:\Users\Rafał\AppData\Roaming\npm;%USERPROFILE%\AppData\Local\Microsoft\WindowsApps;;C:\Users\Rafał\Desktop;;."/>
+    <property name="java.library.path" value="C:\Program Files\Java\jdk1.8.0_161\bin;C:\WINDOWS\Sun\Java\bin;C:\WINDOWS\system32;C:\WINDOWS;C:/Program Files/Java/jdk1.8.0_161/jre/bin/server;C:/Program Files/Java/jdk1.8.0_161/jre/bin;C:/Program Files/Java/jdk1.8.0_161/jre/lib/amd64;C:\Program Files\Docker\Docker\Resources\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\Git\cmd;C:\Program Files\nodejs\;C:\Program Files\MySQL\MySQL Utilities 1.6\;F:\MATLAB\R2017a\runtime\win64;F:\MATLAB\R2017a\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\apache-maven-3.5.3\bin;C:\Program Files\MiKTeX 2.9\miktex\bin\x64\;C:\Program Files\Docker\Docker\Resources\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\Git\cmd;C:\Program Files\nodejs\;C:\Program Files\MySQL\MySQL Utilities 1.6\;F:\MATLAB\R2017a\runtime\win64;F:\MATLAB\R2017a\bin;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\apache-maven-3.5.3\bin;C:\Program Files\MiKTeX 2.9\miktex\bin\x64\;C:\Users\Rafał\AppData\Local\Microsoft\WindowsApps;D:\Microsoft VS Code\bin;C:\Users\Rafał\AppData\Local\GitHubDesktop\bin;C:\Users\Rafał\AppData\Roaming\npm;C:\Users\Rafał\AppData\Local\Turbo\Cmd\;C:\Users\Rafał\Desktop;;."/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
     <property name="java.class.version" value="52.0"/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
@@ -60,5 +60,5 @@
     <property name="sun.desktop" value="windows"/>
     <property name="sun.cpu.isalist" value="amd64"/>
   </properties>
-  <testcase name="testApp" classname="maptest.maptest.AppTest" time="0.002"/>
+  <testcase name="testApp" classname="maptest.maptest.AppTest" time="0.005"/>
 </testsuite>

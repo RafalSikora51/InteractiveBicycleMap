@@ -13,7 +13,7 @@
 		<!-- Assume test is the database name -->
 
 		<property name="hibernate.connection.url">
-			jdbc:mysql://localhost:3306/interactive_map
+			jdbc:mysql://interactivemap.cskdneyltpo0.eu-west-1.rds.amazonaws.com/interactive_map
 		</property>
 
 		<property name="hibernate.connection.username">

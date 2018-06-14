@@ -13,7 +13,7 @@ public class SessionConnection {
 	private static final SessionFactory sessionFactory = buildSessionFactory();
 
 	private static SessionFactory buildSessionFactory() {
-		logger.debug("buildSessionFactory");
+		//logger.debug("buildSessionFactory");
 		try {
 			return new Configuration().configure().buildSessionFactory();
 		} catch (Throwable exception) {
@@ -23,12 +23,12 @@ public class SessionConnection {
 	}
 
 	public static SessionFactory getSessionFactory() {
-		logger.debug("getSessionFactory");
+		//logger.debug("getSessionFactory");
 		return sessionFactory;
 	}
 
 	public static void shutdown(Session session) {
-		logger.debug("shutdown");
+		//logger.debug("shutdown");
 		session.close();
 	}
 

@@ -19,6 +19,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ParamArray } from '../Model/ParamArray';
 import { Injectable, Pipe, PipeTransform } from '@angular/core';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-google-map',
@@ -137,7 +138,7 @@ export class GoogleMapComponent implements OnInit {
           markerTemp.lng = point.lng;
 
           marker = new google.maps.Marker({
-            icon: '/assets/blackpin.png',
+            icon: environment.apiUrl +'/assets/blackpin.png',
             position: markerTemp,
             map: this.googleMap,
             title: 'id: ' + point.id + ', latlng: ' + ' ' + point.lat + '    ' + point.lng,
@@ -153,7 +154,7 @@ export class GoogleMapComponent implements OnInit {
           marker.addListener('click', function () {
             console.log('klikam na end ' + point.id);
             // info2.open(this.googleMap, marker);
-            marker.setIcon('/assets/pin.png');
+            marker.setIcon(environment.apiUrl +'/assets/pin.png');
             that.pressedNodes.push(point.id);
             that.markersToRemove.push(marker);
 
@@ -471,11 +472,11 @@ export class GoogleMapComponent implements OnInit {
           this.getShortestPath(this.markers);
           this.dialogComponent.closeDialog();
 
-          this.markersToRemove[0].setIcon('/assets/greenpin.png');
+          this.markersToRemove[0].setIcon(environment.apiUrl +'/assets/greenpin.png');
           for (let i = 1; i < this.markersToRemove.length - 1; i++) {
-            this.markersToRemove[i].setIcon('/assets/redpin.png');
+            this.markersToRemove[i].setIcon(environment.apiUrl +'/assets/redpin.png');
           }
-          this.markersToRemove[this.markersToRemove.length - 1].setIcon('/assets/placeholder.png');
+          this.markersToRemove[this.markersToRemove.length - 1].setIcon(environment.apiUrl +'/assets/placeholder.png');
         });
 
       this.markers = [];
@@ -524,11 +525,11 @@ export class GoogleMapComponent implements OnInit {
           console.table(this.markers);
           this.getShortestPath(this.markers);
           this.dialogComponent.closeDialog();
-          this.markersToRemove[0].setIcon('/assets/greenpin.png');
+          this.markersToRemove[0].setIcon(environment.apiUrl +'/assets/greenpin.png');
           for (let i = 1; i < this.markersToRemove.length - 1; i++) {
-            this.markersToRemove[i].setIcon('/assets/redpin.png');
+            this.markersToRemove[i].setIcon(environment.apiUrl +'/assets/redpin.png');
           }
-          this.markersToRemove[this.markersToRemove.length - 1].setIcon('/assets/placeholder.png');
+          this.markersToRemove[this.markersToRemove.length - 1].setIcon(environment.apiUrl +'/assets/placeholder.png');
         });
 
       this.markers = [];
@@ -552,7 +553,7 @@ export class GoogleMapComponent implements OnInit {
 
   removeMarkers() {
     for (let i = 0; i < this.markersToRemove.length; i++) {
-      this.markersToRemove[i].setIcon('/assets/blackpin.png');
+      this.markersToRemove[i].setIcon(environment.apiUrl +'/assets/blackpin.png');
       this.markersToRemove[i].setClickable(true);
     }
   }

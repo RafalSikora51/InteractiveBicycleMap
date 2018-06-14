@@ -5,5 +5,5 @@
 
 export const environment = {
   production: false,
-  apiUrl: 'http://rsikora.eu-west-1.elasticbeanstalk.com',
+  apiUrl: 'http://localhost:8090/interactivemap',
 };
