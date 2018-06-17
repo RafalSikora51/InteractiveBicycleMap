@@ -1,6 +1,7 @@
 package com.interactive.map.entity;
 
 import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -11,12 +12,10 @@ import javax.persistence.ManyToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
 
-import org.hamcrest.core.Is;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
-@Table(name = "Point")
+@Table(name = "point")
 public class Point {
 
 	boolean isAvailable;
@@ -26,15 +25,13 @@ public class Point {
 	@Column(name = "POINT_ID", insertable = false, updatable = false)
 	private int id;
 
-	
-
 	@Column(name = "LATITUDE", nullable = false)
 	private double latitude;
 
 	@Column(name = "LONGITUDE", nullable = false)
 	private double longitude;
 
-	@ManyToMany(mappedBy = "points",  fetch = FetchType.EAGER)
+	@ManyToMany(mappedBy = "points", fetch = FetchType.EAGER)
 	@OrderBy("id")
 	@JsonIgnore
 	private List<Segment> segments;
@@ -123,7 +120,7 @@ public class Point {
 		this.isAvailable = true;
 		this.segments = segments;
 	}
-	
+
 	@Override
 	public String toString() {
 		return "Point [id=" + id + ", longitude=" + longitude + ", latitude=" + latitude + "]";

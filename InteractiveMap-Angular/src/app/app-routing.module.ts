@@ -5,9 +5,9 @@ import { SegmentComponent } from './segment/segment.component';
 import { environment } from '../environments/environment';
 const routes: Routes = [
   { path: '', component: GoogleMapComponent },
-  { path: 'interactivemap/segments/alljson', component: SegmentComponent },
-  { path: 'interactivemap/segments', component: SegmentComponent },
-  { path: 'http://rsikora.eu-west-1.elasticbeanstalk.com/segments/:id', component: SegmentComponent },
+  { path: 'segments/alljson', component: SegmentComponent },
+  { path: 'segments', component: SegmentComponent },
+  { path: 'http://localhost:8080/segments/:id', component: SegmentComponent },
 
 ];
 

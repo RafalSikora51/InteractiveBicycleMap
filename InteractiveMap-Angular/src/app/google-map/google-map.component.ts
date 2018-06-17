@@ -1,25 +1,13 @@
 import { Component, OnInit } from '@angular/core';
-import { ViewChild } from '@angular/core';
 import { } from '@types/googlemaps';
-import { map } from 'rxjs/operator/map';
-import { Input, Output, EventEmitter } from '@angular/core';
 import { Marker } from '../Model/marker';
 import { SegmentService } from '../segment/segment.service';
-import { SegmentComponent } from '../segment/segment.component';
 import { SegmentPointSet } from '../Model/SegmentPointSet';
-import { GoogleMapService } from './google-map.service';
-import { Point } from '../Model/point';
 import { NodeAddress } from '../Model/NodeAddress';
-import { Observable, of, config } from 'rxjs';
-import { HttpResponse } from 'selenium-webdriver/http';
-import { MatDialogModule } from '@angular/material/dialog';
 import { DialogComponent } from '../dialog/dialog.component';
 import { MatSnackBar } from '@angular/material';
-import { BrowserModule } from '@angular/platform-browser';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ParamArray } from '../Model/ParamArray';
-import { Injectable, Pipe, PipeTransform } from '@angular/core';
-import { environment } from '../../environments/environment';
+import { FinalMarker } from '../Model/finalMarker';
 
 @Component({
   selector: 'app-google-map',
@@ -29,36 +17,29 @@ import { environment } from '../../environments/environment';
 export class GoogleMapComponent implements OnInit {
   addBicycleLayerEnable: boolean;
   bikeLayer: any;
-  showArray: boolean;
   tempMarker: Marker = { lat: 0, lng: 0 };
   markersArray: any[] = [0, 0];
   segmentPointsSet: SegmentPointSet[];
-  dijkstraSet: SegmentPointSet[] = [];
   dijkstraArray: any[] = [0, 0];
   nodesArray: any[];
   polyLines: any[] = [];
-  pressedNodes: any[] = [];
   markersToRemove: any[] = [0, 0];
-  dragOperation = false;
-  addressArray: NodeAddress[] = [];
   addressArrayForStepper: NodeAddress[] = [];
-  recycledMarkers: NodeAddress[] = [];
-  recycledMarkersWithoutAdress: Array<number> = [];
-  pressedMarkersWithoutAddress: Array<number> = [];
+  finalMarkers: Array<FinalMarker> = [];
+  incorrectMarkers: Array<FinalMarker> = [];
   paramArray: ParamArray = { pressedNodes: [], recycledNodes: [] };
   length: any = 0;
   infowindows: any = [];
   isMarkerClickable = true;
-  locationString: String = ' ';
+  // locationString: String = ' ';
+  helpMarker: google.maps.Marker;
   constructor(private segmentService: SegmentService,
-    private segmentComponent: SegmentComponent,
     private dialogComponent: DialogComponent,
     public snackBarComponent: MatSnackBar
 
   ) {
     this.addBicycleLayerEnable = false;
     this.bikeLayer = new google.maps.BicyclingLayer();
-    this.showArray = false;
   }
 
   showFiller = false;
@@ -87,19 +68,12 @@ export class GoogleMapComponent implements OnInit {
     this.googleMap = new google.maps.Map(mapCanvas, mapOptions);
     this.geocoder = new google.maps.Geocoder();
 
-    //  google.maps.event.addListener(this.googleMap, 'click', (event) => {
-    //   this.placeMarker(event);
-
-    //  });
-
     this.markersArray.pop();
     this.markersArray.pop();
     this.dijkstraArray.pop();
     this.dijkstraArray.pop();
     this.markersToRemove.pop();
     this.markersToRemove.pop();
-    this.pressedNodes.push();
-    this.recycledMarkers.push();
 
   }
 
@@ -124,9 +98,6 @@ export class GoogleMapComponent implements OnInit {
     this.segmentService.getAllNodes().subscribe(
       nodes => {
         this.nodesArray = nodes;
-        // console.log('Jestem w getNodes');
-        // console.table(this.nodesArray);
-
         this.nodesArray.forEach(node => {
 
           let point;
@@ -138,32 +109,19 @@ export class GoogleMapComponent implements OnInit {
           markerTemp.lng = point.lng;
 
           marker = new google.maps.Marker({
-            icon: environment.apiUrl +'/assets/blackpin.png',
+            icon: '/assets/blackpin.png',
             position: markerTemp,
             map: this.googleMap,
             title: 'id: ' + point.id + ', latlng: ' + ' ' + point.lat + '    ' + point.lng,
           });
 
-          //    const contentInfo = '<p><app-dialog></app-dialog></p>';
-
-          //   const info2 = new google.maps.InfoWindow({
-          //     content: contentInfo
-
-          //   });
-
           marker.addListener('click', function () {
-            console.log('klikam na end ' + point.id);
-            // info2.open(this.googleMap, marker);
-            marker.setIcon(environment.apiUrl +'/assets/pin.png');
-            that.pressedNodes.push(point.id);
+            marker.setIcon('/assets/pin.png');
+
             that.markersToRemove.push(marker);
-
             marker.setClickable(false);
-            // that.DialogComponent.openDialog();
-
-            // that.dialogComponent.openDialog();
-
-            that.geocodeLatLng(that.geocoder, that.googleMap, point.lat, point.lng, point.id, marker);
+            that.helpMarker = marker;
+            that.geocodeLatLng(that.geocoder, that.googleMap, point.lat, point.lng, point.id, that.helpMarker);
 
           });
         });
@@ -184,9 +142,11 @@ export class GoogleMapComponent implements OnInit {
       if (status === 'OK') {
         if (results[0]) {
           const place: NodeAddress = { id: idd, address: results[0].formatted_address };
-          that.addressArray.push(place);
-          that.addressArrayForStepper.push(place);
+
+          // that.addressArrayForStepper.push(place);
           let splittedResult = results[0].formatted_address;
+          // tslint:disable-next-line:prefer-const
+          let result = splittedResult;
           splittedResult = splittedResult.split(',', 1);
           const contentInfo = '<html>' +
             '<head>' +
@@ -224,7 +184,7 @@ export class GoogleMapComponent implements OnInit {
             info2.close();
           }
           info2.open(this.googleMap, marker);
-
+          that.finalMarkers.push({ id: idd, address: result, marker: marker });
         } else {
           console.log('No results found');
         }
@@ -294,41 +254,6 @@ export class GoogleMapComponent implements OnInit {
 
   }
 
-
-
-
-
-
-  placeMarker(event) {
-
-    const marker = new google.maps.Marker({
-      position: event.latLng,
-      map: this.googleMap
-    });
-    console.log('' + event.latLng.lat() + ', ' + event.latLng.lng());
-
-    const tempInfo = '' + event.latLng.lat() + ', ' + event.latLng.lng();
-    const latlng = new google.maps.LatLng(event.latLng.lat(), event.latLng.lng());
-    this.geocoder = new google.maps.Geocoder();
-
-    const info = new google.maps.InfoWindow({
-      content: this.locationString.toString()
-
-    });
-
-    marker.addListener('click', function () {
-      info.open(this.googleMap, marker);
-    });
-
-
-    this.tempMarker.lat = event.latLng.lat();
-    this.tempMarker.lng = event.latLng.lng();
-    this.markersArray.push(this.tempMarker);
-    this.tempMarker = { lat: 0, lng: 0 };
-
-  }
-
-
   drawPath() {
     const Path = new google.maps.Polyline({
       path: this.markersArray,
@@ -349,9 +274,7 @@ export class GoogleMapComponent implements OnInit {
 
     this.segmentPointsSet.forEach(element => {
       // tslint:disable-next-line:prefer-const
-      let markerStart;
-      // tslint:disable-next-line:prefer-const
-      let markerEnd;
+
       start_point = element['start_point'];
       end_point = element['end_point'];
       const start_markerTemp: Marker = { lat: 0, lng: 0 };
@@ -380,6 +303,150 @@ export class GoogleMapComponent implements OnInit {
 
   }
 
+  doDijkstraOnList() {
+    this.addressArrayForStepper = [];
+    for (let i = 0; i < this.finalMarkers.length; i++) {
+      this.addressArrayForStepper.push(this.finalMarkers[i]);
+    }
+
+
+    this.incorrectMarkers.push(this.finalMarkers[0]);
+    this.incorrectMarkers.pop();
+    // tslint:disable-next-line:no-shadowed-variable
+    this.finalMarkers.forEach(element => {
+      this.paramArray.pressedNodes.push(element.id);
+    });
+
+    // tslint:disable-next-line:no-shadowed-variable
+    this.incorrectMarkers.forEach(element => {
+      this.paramArray.recycledNodes.push(element.id);
+    });
+
+    if (this.finalMarkers.length <= 1) {
+      this.snackBarComponent.open('Za mało podanych punktów', 'OK', {
+        duration: 3000,
+      });
+    } else {
+      this.showArrayMarkers();
+      this.dialogComponent.openDialog();
+      this.segmentService.dijkstraOnList(this.paramArray)
+        .subscribe(markers => {
+          this.markers = markers;
+         // console.table(this.markers);
+          this.getShortestPath(this.markers);
+          this.dialogComponent.closeDialog();
+
+          this.finalMarkers[0].marker.setIcon('/assets/greenpin.png');
+          this.finalMarkers.forEach(element => {
+            if (element !== this.finalMarkers[0]) {
+              element.marker.setIcon('/assets/redpin.png');
+            }
+
+          });
+          this.finalMarkers[this.finalMarkers.length - 1].marker.setIcon('/assets/placeholder.png');
+
+        });
+
+      this.markers = [];
+
+      this.paramArray.pressedNodes = [];
+      this.paramArray.recycledNodes = [];
+      this.incorrectMarkers = [];
+      this.showArrayMarkers();
+    }
+  }
+
+  doBellmanOnList() {
+    this.addressArrayForStepper = [];
+    for (let i = 0; i < this.finalMarkers.length; i++) {
+      this.addressArrayForStepper.push(this.finalMarkers[i]);
+    }
+
+    this.incorrectMarkers.push(this.finalMarkers[0]);
+    this.incorrectMarkers.pop();
+    // tslint:disable-next-line:no-shadowed-variable
+    this.finalMarkers.forEach(element => {
+      this.paramArray.pressedNodes.push(element.id);
+    });
+
+    // tslint:disable-next-line:no-shadowed-variable
+    this.incorrectMarkers.forEach(element => {
+      this.paramArray.recycledNodes.push(element.id);
+    });
+
+    if (this.finalMarkers.length <= 1) {
+      this.snackBarComponent.open('Za mało podanych punktów', 'OK', {
+        duration: 3000,
+      });
+    } else {
+      this.showArrayMarkers();
+      this.dialogComponent.openDialog();
+      this.segmentService.BellmanOnList(this.paramArray)
+        .subscribe(markers => {
+          this.markers = markers;
+          // console.table(this.markers);
+          this.getShortestPath(this.markers);
+          this.dialogComponent.closeDialog();
+
+          this.finalMarkers[0].marker.setIcon('/assets/greenpin.png');
+          this.finalMarkers.forEach(element => {
+            if (element !== this.finalMarkers[0]) {
+              element.marker.setIcon('/assets/redpin.png');
+            }
+
+          });
+          this.finalMarkers[this.finalMarkers.length - 1].marker.setIcon('/assets/placeholder.png');
+        });
+
+      this.markers = [];
+      this.paramArray.pressedNodes = [];
+      this.paramArray.recycledNodes = [];
+      this.incorrectMarkers = [];
+      this.showArrayMarkers();
+    }
+  }
+
+  removePolylines() {
+    for (let i = 0; i < this.polyLines.length; i++) {
+      this.polyLines[i].setMap(null);
+    }
+  }
+
+  removeMarkers() {
+    for (let i = 0; i < this.markersToRemove.length; i++) {
+      this.markersToRemove[i].setIcon('assets/blackpin.png');
+      this.markersToRemove[i].setClickable(true);
+    }
+  }
+
+  mapReset(): void {
+    this.removePolylines();
+    this.removeMarkers();
+    this.markers = [];
+    this.markersToRemove = [];
+    this.addressArrayForStepper = [];
+    this.paramArray.pressedNodes = [];
+    this.paramArray.pressedNodes = [];
+    this.isMarkerClickable = true;
+    this.length = 0;
+    this.finalMarkers = [];
+    this.incorrectMarkers = [];
+    this.closeAllInfoWindows();
+  }
+  closeAllInfoWindows() {
+    for (let i = 0; i < this.infowindows.length; i++) {
+      this.infowindows[i].close();
+    }
+  }
+  dialogTest(): void {
+    this.dialogComponent.openDialog();
+  }
+
+  showMarkersToRemove() {
+    console.table(this.markersArray);
+  }
+
+
 
   addBicycleLayer() {
 
@@ -401,197 +468,11 @@ export class GoogleMapComponent implements OnInit {
 
 
   showArrayMarkers() {
-
-    this.pressedNodes.forEach(
-
-      element => {
-        console.log(element);
-      }
-    );
+    console.table(this.finalMarkers);
 
   }
 
 
-  showrecycled() {
-    console.log('Recycled Markers:');
-    console.table(this.recycledMarkers);
-    console.log(' recycledMarkersWithoutAdress:');
-    console.log(this.recycledMarkersWithoutAdress);
-  }
-
-  createListsWithNodeIDs() {
-    this.addressArray.forEach(element => {
-      console.log(element.id);
-      this.pressedMarkersWithoutAddress.push(element.id);
-    });
-    this.recycledMarkers.forEach(element => {
-      console.log(element.id);
-      this.recycledMarkersWithoutAdress.push(element.id);
-    });
-
-
-  }
-
-  trackBy(addressArrayForStepper: NodeAddress): NodeAddress { return addressArrayForStepper; }
-
-
-
-
-  doDijkstraOnList() {
-    this.addressArrayForStepper = this.addressArray;
-    this.createListsWithNodeIDs();
-    console.table('recycled:' + this.recycledMarkers);
-
-    console.table('recycledwithoutaddress' + this.recycledMarkersWithoutAdress);
-    console.table('pressedwithoutaddess' + this.pressedMarkersWithoutAddress);
-
-    this.pressedMarkersWithoutAddress.forEach(element => {
-      this.paramArray.pressedNodes.push(element);
-    });
-    this.recycledMarkersWithoutAdress.forEach(element => {
-      this.paramArray.recycledNodes.push(element);
-    });
-
-
-    console.log(this.paramArray.pressedNodes);
-    console.log(this.paramArray.recycledNodes);
-
-    console.log('pressedNodes na poczatku dijkstry: ' + this.pressedNodes);
-
-    if (this.pressedNodes.length <= 1) {
-      this.snackBarComponent.open('Za mało podanych punktów', 'OK', {
-        duration: 3000,
-      });
-    } else {
-      this.showArrayMarkers();
-      this.dialogComponent.openDialog();
-      this.segmentService.dijkstraOnList(this.paramArray)
-        .subscribe(markers => {
-          this.markers = markers;
-          console.table(this.markers);
-          this.getShortestPath(this.markers);
-          this.dialogComponent.closeDialog();
-
-          this.markersToRemove[0].setIcon(environment.apiUrl +'/assets/greenpin.png');
-          for (let i = 1; i < this.markersToRemove.length - 1; i++) {
-            this.markersToRemove[i].setIcon(environment.apiUrl +'/assets/redpin.png');
-          }
-          this.markersToRemove[this.markersToRemove.length - 1].setIcon(environment.apiUrl +'/assets/placeholder.png');
-        });
-
-      this.markers = [];
-      this.pressedNodes = [];
-      this.addressArray = [];
-      this.paramArray.pressedNodes = [];
-      console.log('klikniete punkty to (pressedNodes): ');
-      this.recycledMarkers = [];
-      console.table(this.pressedNodes);
-      this.showArrayMarkers();
-    }
-  }
-
-  doBellmanOnList() {
-    this.addressArrayForStepper = this.addressArray;
-    this.createListsWithNodeIDs();
-    console.table('recycled:' + this.recycledMarkers);
-
-    console.table('recycledwithoutaddress' + this.recycledMarkersWithoutAdress);
-    console.table('pressedwithoutaddess' + this.pressedMarkersWithoutAddress);
-
-    this.pressedMarkersWithoutAddress.forEach(element => {
-      this.paramArray.pressedNodes.push(element);
-    });
-    this.recycledMarkersWithoutAdress.forEach(element => {
-      this.paramArray.recycledNodes.push(element);
-    });
-
-
-    console.log(this.paramArray.pressedNodes);
-    console.log(this.paramArray.recycledNodes);
-
-    if (this.pressedNodes.length <= 1) {
-      this.snackBarComponent.open('Za mało podanych punktów', 'OK', {
-        duration: 3000,
-
-      });
-    } else {
-      this.showArrayMarkers();
-      this.dialogComponent.openDialog();
-      console.log(this.pressedNodes);
-
-      this.segmentService.BellmanOnList(this.paramArray)
-        .subscribe(markers => {
-          this.markers = markers;
-          console.table(this.markers);
-          this.getShortestPath(this.markers);
-          this.dialogComponent.closeDialog();
-          this.markersToRemove[0].setIcon(environment.apiUrl +'/assets/greenpin.png');
-          for (let i = 1; i < this.markersToRemove.length - 1; i++) {
-            this.markersToRemove[i].setIcon(environment.apiUrl +'/assets/redpin.png');
-          }
-          this.markersToRemove[this.markersToRemove.length - 1].setIcon(environment.apiUrl +'/assets/placeholder.png');
-        });
-
-      this.markers = [];
-      this.addressArray = [];
-      this.pressedNodes = [];
-      // this.pressedMarkersWithoutAddress = [];
-      this.paramArray.pressedNodes = [];
-      console.log('klikniete punkty to (pressedNodes): ');
-      //   this.mapReset();
-      this.recycledMarkers = [];
-      console.table(this.pressedNodes);
-      this.showArrayMarkers();
-    }
-  }
-
-  removePolylines() {
-    for (let i = 0; i < this.polyLines.length; i++) {
-      this.polyLines[i].setMap(null);
-    }
-  }
-
-  removeMarkers() {
-    for (let i = 0; i < this.markersToRemove.length; i++) {
-      this.markersToRemove[i].setIcon(environment.apiUrl +'/assets/blackpin.png');
-      this.markersToRemove[i].setClickable(true);
-    }
-  }
-
-  mapReset(): void {
-    this.removePolylines();
-    this.removeMarkers();
-    this.addressArray = [];
-    this.pressedNodes = [];
-    this.markers = [];
-    this.markersToRemove = [];
-    this.pressedNodes = [];
-    this.recycledMarkers = [];
-    this.pressedMarkersWithoutAddress = [];
-    this.recycledMarkersWithoutAdress = [];
-    this.paramArray.pressedNodes = [];
-    this.paramArray.pressedNodes = [];
-    this.isMarkerClickable = true;
-    this.length = 0;
-    this.closeAllInfoWindows();
-  }
-  closeAllInfoWindows() {
-    for (let i = 0; i < this.infowindows.length; i++) {
-      this.infowindows[i].close();
-    }
-  }
-  dialogTest(): void {
-    this.dialogComponent.openDialog();
-  }
-
-  showMarkersToRemove() {
-    console.table(this.markersArray);
-  }
-
-
-  showAddresses() {
-    console.table(this.addressArray);
-  }
 
 }
 

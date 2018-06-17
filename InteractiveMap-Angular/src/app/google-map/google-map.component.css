@@ -58,3 +58,6 @@ snack-bar-container.success-snackbar {
 .success-snackbar .mat-simple-snackbar {
   color: #0f4c29;
 }
+body{
+  zoom:2;
+}

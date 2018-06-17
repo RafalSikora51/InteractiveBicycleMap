@@ -5,22 +5,12 @@
       <span class="example-spacer"></span>
       <span>Interaktywna mapa ścieżek rowerowych</span>
       <a mat-raised-button color="primary" href="https://github.com/RafalSikora51/interactiveMap">GitHub</a>
-      <button mat-icon-button [mat-menu-trigger-for]="menu">
-        <mat-icon>menu</mat-icon>
-      </button>
+      <span class="example-spacer"></span>
     </mat-toolbar-row>
-
   </mat-toolbar>
-  <mat-menu x-position="before" #menu="matMenu">
-
-    <p>
-
-    </p>
-
-
-  </mat-menu>
+  
   <mat-sidenav-container class="example-container">
-    <mat-sidenav #sidenav mode="over" style='min-width: 900px; font-family: Roboto;'>
+    <mat-sidenav #sidenav mode="over" style='min-width: 600px; font-family: Roboto;'>
       <p style="font-size: 24px">Szczegóły dotyczące punktów ( Przeciągaj punkty metodą Drag & Drop):</p>
       <mat-divider></mat-divider>
       <mat-grid-list cols="2">
@@ -35,9 +25,9 @@
                   <mat-divider></mat-divider>
                 </div>
                 <div class="panel-body">
-                  <ul class="list-group" dnd-sortable-container [sortableData]="addressArray" [dropZones]="['delete-dropZone']">
-                    <mat-list *ngIf="addressArray">
-                      <mat-list-item *ngFor="let marker of addressArray; let i = index" class="list-group-item" dnd-sortable [sortableIndex]="i">{{marker.address}}</mat-list-item>
+                  <ul class="list-group" dnd-sortable-container [sortableData]="finalMarkers" [dropZones]="['delete-dropZone']">
+                    <mat-list *ngIf="finalMarkers">
+                      <mat-list-item *ngFor="let marker of finalMarkers; let i = index" class="list-group-item" dnd-sortable [sortableIndex]="i">{{marker.address}}</mat-list-item>
                     </mat-list>
                   </ul>
                 </div>
@@ -46,26 +36,22 @@
           </div>
         </mat-grid-tile>
         <mat-grid-tile>
-          <div class="col-sm-6">
-            <div class="panel panel-default">
-              <div class="panel-body">
+          <div class="col-sm-3">
+            <div class="panel panel-success">
+              <div class="panel-heading">
                 <p style="font-size: 18px">Wybrane punkty:</p>
                 <mat-divider></mat-divider>
                 <mat-divider></mat-divider>
                 <mat-divider></mat-divider>
-
-                <mat-list *ngIf="addressArray">
-                  <mat-list-item *ngFor="let marker of addressArray; let i = index">{{i + 1}}. {{marker.address}}</mat-list-item>
-                </mat-list> 
+                <mat-list *ngIf="finalMarkers">
+                  <mat-list-item *ngFor="let marker of finalMarkers; let i = index">{{i + 1}}. {{marker.address}}</mat-list-item>
+                </mat-list>
                 <br/>
-
               </div>
             </div>
             <button mat-raised-button color="primary" (click)="sidenav.toggle()" style="width: 100%;">Przejdź Dalej</button>
           </div>
         </mat-grid-tile>
-
-
         <mat-grid-tile>
           <div class="row">
             <div class="col-sm-6">
@@ -77,13 +63,13 @@
                   <mat-divider></mat-divider>
                 </div>
                 <div class="panel panel-default">
-                  <div class="panel-body" dnd-sortable-container [dropZones]="['delete-dropZone']" [sortableData]="recycledMarkers">
+                  <div class="panel-body" dnd-sortable-container [dropZones]="['delete-dropZone']" [sortableData]="incorrectMarkers">
                     Przeciągnij tutaj niechciane punkty
                     <br/>
                   </div>
                 </div>
-                <mat-list *ngIf="recycledMarkers">
-                  <mat-list-item *ngFor="let marker of recycledMarkers; let i = index">{{i + 1}}. {{marker.address}}</mat-list-item>
+                <mat-list *ngIf="incorrectMarkers">
+                  <mat-list-item *ngFor="let marker of incorrectMarkers; let i = index">{{i + 1}}. {{marker.address}}</mat-list-item>
                 </mat-list>
               </div>
             </div>
@@ -103,16 +89,9 @@
               <mat-divider></mat-divider>
               <mat-divider></mat-divider>
               <mat-divider></mat-divider>
-
-              <!--  <a mat-list-item (click)="addAllMarkersFromAPI()">Wyświetl ścieżki</a>
-               <a mat-list-item (click)="getNodes()">Dodaj ścieżki do mapy</a> -->
               <mat-divider></mat-divider>
               <a mat-list-item (click)=" sidenav.toggle()">Zaplanuj trasę</a>
               <mat-divider></mat-divider>
-              <!--  <a mat-list-item (click)=" addBicycleLayer()">Wyświetl ścieżki Google</a>
-              <mat-divider></mat-divider>
-              <a mat-list-item (click)="removeBicycleLayer()">Usuń ścieżki z mapy</a> 
-              <mat-divider></mat-divider> -->
               <a mat-list-item (click)="doDijkstraOnList()">Wyznacz ścieżkę - Dijkstra</a>
               <mat-divider></mat-divider>
               <a mat-list-item (click)="doBellmanOnList()">Wyznacz ścieżkę - Bellman-Ford</a>
@@ -120,19 +99,39 @@
               <a mat-list-item (click)="mapReset()">Reset mapy</a>
               <mat-divider></mat-divider>
               <a mat-list-item (click)="closeAllInfoWindows()">Zamknij okna dialogowe</a>
-             <mat-divider></mat-divider>
-            <!--  <a mat-list-item (click)="showAddresses()">pokaz id i adresy nodeow</a>
               <mat-divider></mat-divider>
-              <a mat-list-item (click)="showrecycled()">pokaz id i adresy recycled</a>  -->
+              <mat-divider></mat-divider>
+              <mat-divider></mat-divider>
+              <mat-divider></mat-divider>
+              <mat-divider></mat-divider>
+              <a mat-list-item class="not-active">Legenda</a>
+              <mat-divider></mat-divider>
+              <mat-divider></mat-divider>
+              <mat-divider></mat-divider>
+              <mat-divider style="margin-bottom: 20px;"></mat-divider>
+              <mat-list-item style="font-size:100%; min-width:200px;">
+                <img mat-card-avatar src="/assets/greenpin.png">
+                <p style=" margin-left:20px;">Początek trasy</p>
+              </mat-list-item>
+              <mat-list-item style="font-size:100%; min-width:200px;">
+                <img mat-card-avatar src="/assets/placeholder.png">
+                <p style=" margin-left:20px;">Koniec trasy</p>
+              </mat-list-item>
+              <mat-list-item style="font-size:100%; min-width:200px;">
+                <img mat-card-avatar src="/assets/redpin.png">
+                <p style=" margin-left:20px;">Punkty pośrednie</p>
+              </mat-list-item>
+              <mat-list-item style="font-size:100%; min-width:200px;">
+                <img mat-card-avatar src="/assets/pin.png">
+                <p style=" margin-left:20px;">Punkty zaznaczone</p>
+              </mat-list-item>
             </mat-nav-list>
           </mat-sidenav>
           <mat-sidenav-content>
             <div id="map" style="width:100%;height:600px"></div>
           </mat-sidenav-content>
-
         </mat-sidenav-container>
       </div>
-
       <div style='min-height:200px'>
         <mat-card class="example-card" style="overflow: hidden;">
           <hr color="#595959" width="100%">
@@ -146,24 +145,20 @@
                 <mat-grid-list cols="2" rowHeight="120px">
                   <mat-grid-tile>
                     <mat-horizontal-stepper *ngIf="addressArrayForStepper.length>=1">
-                      <div *ngFor="let marker of addressArrayForStepper;  trackBy: trackBy;">
+                      <div *ngFor="let marker of addressArrayForStepper;">
                         <mat-step>{{marker.address}}</mat-step>
                       </div>
                     </mat-horizontal-stepper>
                   </mat-grid-tile>
                   <mat-grid-tile *ngIf="length!=0">
-
                     <p>Dlugość trasy : {{length | number: '1.2-2'}} km</p>
                   </mat-grid-tile>
-
                 </mat-grid-list>
-
               </mat-card-content>
             </mat-tab>
-
           </mat-tab-group>
-
         </mat-card>
       </div>
     </mat-sidenav-content>
   </mat-sidenav-container>
+</div>

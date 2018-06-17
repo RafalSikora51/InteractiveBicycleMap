@@ -13,10 +13,12 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.OrderBy;
+import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
+@Table(name = "segment")
 public class Segment {
 
 	@Id
@@ -40,7 +42,7 @@ public class Segment {
 	private double length;
 
 	@ManyToMany(cascade = { CascadeType.ALL },  fetch = FetchType.EAGER)
-	@JoinTable(name = "SEGMENT_POINT", joinColumns = {
+	@JoinTable(name = "segment_point", joinColumns = {
 			@JoinColumn(name = "SEGMENT_ID", nullable = false) }, inverseJoinColumns = {
 					@JoinColumn(name = "POINT_ID", nullable = false) })
 	@OrderBy("id")
